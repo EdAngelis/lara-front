@@ -12,6 +12,7 @@ import {
   useSettings,
 } from "@/components/SettingsContext";
 import { Text, useThemeColor, View } from "@/components/Themed";
+import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 
 export default function SettingsScreen() {
   const { settings, updateSetting, resetSettings } = useSettings();
@@ -113,20 +114,30 @@ export default function SettingsScreen() {
     },
   ];
 
-  const difficultyOptions = [
+  const sizeOptions = [
     {
-      label: "Easy",
+      label: "Very Easy",
       value: 0 as Size,
       description: "Simple patterns and basic concepts",
     },
     {
-      label: "Medium",
+      label: "Easy",
       value: 1 as Size,
+      description: "Simple patterns and basic concepts",
+    },
+    {
+      label: "Medium",
+      value: 2 as Size,
       description: "Moderate complexity challenges",
     },
     {
       label: "Hard",
-      value: 2 as Size,
+      value: 3 as Size,
+      description: "Advanced patterns and concepts",
+    },
+    {
+      label: "Very Hard",
+      value: 4 as Size,
       description: "Advanced patterns and concepts",
     },
   ];
@@ -167,7 +178,7 @@ export default function SettingsScreen() {
 
         <RadioGroup
           title="Size Level"
-          options={difficultyOptions}
+          options={sizeOptions}
           selectedValue={settings.size}
           onValueChange={(value) => updateSetting("size", value)}
           row
@@ -234,7 +245,8 @@ export default function SettingsScreen() {
               Size: {["1", "2", "3"][settings.size]}
             </Text>
             <Text style={styles.previewText}>
-              Color Scheme: {settings.colorScheme}
+              Color Scheme:{" "}
+              {COLOR_SCHEMES[settings.colorScheme]?.name || "Unknown"}
             </Text>
             <Text style={styles.previewText}>
               {settings.type === "letter"

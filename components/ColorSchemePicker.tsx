@@ -1,37 +1,12 @@
+import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 import React from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { Text, useThemeColor, View } from "./Themed";
 
-interface ColorScheme {
-  name: string;
-  colors: string[];
-  value: string;
-}
-
-const colorSchemes: ColorScheme[] = [
-  {
-    name: "Default",
-    colors: ["#007AFF", "#34C759", "#FF9500"],
-    value: "default",
-  },
-  { name: "Warm", colors: ["#FF6B6B", "#4ECDC4", "#45B7D1"], value: "warm" },
-  { name: "Cool", colors: ["#6C5CE7", "#A29BFE", "#74B9FF"], value: "cool" },
-  {
-    name: "Monochrome",
-    colors: ["#2D3436", "#636E72", "#B2BEC3"],
-    value: "monochrome",
-  },
-  {
-    name: "Vibrant",
-    colors: ["#E17055", "#FDCB6E", "#6C5CE7"],
-    value: "vibrant",
-  },
-];
-
 interface ColorSchemePickerProps {
   title: string;
-  selectedValue: string;
-  onValueChange: (value: string) => void;
+  selectedValue: number;
+  onValueChange: (value: number) => void;
   style?: any;
 }
 
@@ -48,31 +23,37 @@ export function ColorSchemePicker({
     <View style={[styles.container, style]}>
       <Text style={styles.title}>{title}</Text>
       <View style={styles.schemesContainer}>
-        {colorSchemes.map((scheme) => (
+        {COLOR_SCHEMES.map((scheme, index) => (
           <TouchableOpacity
             key={scheme.value}
             style={[
               styles.schemeOption,
               { borderColor },
-              selectedValue === scheme.value && {
+              selectedValue === index && {
                 borderColor: activeColor,
                 borderWidth: 3,
               },
             ]}
-            onPress={() => onValueChange(scheme.value)}
+            onPress={() => onValueChange(index)}
           >
             <View style={styles.colorPreview}>
-              {scheme.colors.map((color, index) => (
-                <View
-                  key={index}
-                  style={[styles.colorSample, { backgroundColor: color }]}
-                />
-              ))}
+              <View
+                style={[
+                  styles.colorSample,
+                  { backgroundColor: scheme.letters },
+                ]}
+              />
+              <View
+                style={[
+                  styles.colorSample,
+                  { backgroundColor: scheme.background },
+                ]}
+              />
             </View>
             <Text
               style={[
                 styles.schemeName,
-                selectedValue === scheme.value && {
+                selectedValue === index && {
                   color: activeColor,
                   fontWeight: "600",
                 },
@@ -117,6 +98,7 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     marginHorizontal: 1,
+    borderColor: "#000",
   },
   schemeName: {
     fontSize: 12,

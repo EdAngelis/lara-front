@@ -2,13 +2,13 @@ import React, { createContext, ReactNode, useContext, useState } from "react";
 
 export type GameMode = "assertive" | "comparison";
 export type GameType = "letter" | "number" | "shape";
-export type Size = 0 | 1 | 2;
+export type Size = 0 | 1 | 2 | 3 | 4;
 
 export interface GameSettings {
   mode: GameMode;
   type: GameType;
   size: Size;
-  colorScheme: string;
+  colorScheme: number;
   toPractice: string[];
 }
 
@@ -24,8 +24,8 @@ interface SettingsContextType {
 const defaultSettings: GameSettings = {
   mode: "assertive",
   type: "letter",
-  size: 0,
-  colorScheme: "default",
+  size: 2,
+  colorScheme: 0,
   toPractice: [],
 };
 

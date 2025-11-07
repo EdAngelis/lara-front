@@ -1,5 +1,6 @@
 import { useSettings } from "@/components/SettingsContext";
 import { Text, View } from "@/components/Themed";
+import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 import { router } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -11,7 +12,30 @@ import {
 
 export default function ComparisonScreen() {
   // Get settings from context
-  const { settings } = useSettings();
+  const { settings, updateSetting } = useSettings();
+
+  // Get current color scheme based on settings
+  const currentColorScheme = useMemo(() => {
+    return COLOR_SCHEMES[settings.colorScheme] || COLOR_SCHEMES[0];
+  }, [settings.colorScheme]);
+
+  // Get font size based on size setting
+  const fontSize = useMemo(() => {
+    switch (settings.size) {
+      case 0: // Easy
+        return 240;
+      case 1: // Medium
+        return 200;
+      case 2: // Hard
+        return 160;
+      case 3: // Very Hard
+        return 120;
+      case 4: // Extremely Hard
+        return 100;
+      default:
+        return 160;
+    }
+  }, [settings.size]);
 
   // Create arrays based on type setting
   const items = useMemo(() => {
@@ -33,6 +57,9 @@ export default function ComparisonScreen() {
 
   // Game state: which side is the correct answer ('left' or 'right')
   const [targetSide, setTargetSide] = useState<"left" | "right">("left");
+
+  // Track if swipe has been processed to prevent multiple triggers
+  const [swipeProcessed, setSwipeProcessed] = useState(false);
 
   // Force landscape orientation when component mounts
   useEffect(() => {
@@ -158,29 +185,90 @@ export default function ComparisonScreen() {
 
   // Gesture handler for swipe to navigate
   const onGestureEvent = (event: any) => {
-    const { translationX, velocityX } = event.nativeEvent;
+    const { translationX, velocityX, translationY, velocityY } =
+      event.nativeEvent;
 
-    // Check if it's a right swipe (positive translationX and velocity)
-    if (translationX > 100 && velocityX > 500) {
+    // Check if it's a right swipe (positive translationX and velocity) and not processed yet
+    if (translationX > 100 && velocityX > 500 && !swipeProcessed) {
+      setSwipeProcessed(true);
       router.push("/");
     }
+
+    // Check if it's a left swipe (negative translationX and velocity) and not processed yet
+    if (translationX < -100 && velocityX < -500 && !swipeProcessed) {
+      setSwipeProcessed(true);
+      const currentIndex = settings.colorScheme;
+      const nextIndex =
+        currentIndex + 1 >= COLOR_SCHEMES.length ? 0 : currentIndex + 1;
+      updateSetting("colorScheme", nextIndex);
+    }
+
+    // Check if it's an upward swipe (negative translationY and velocity) and not processed yet
+    if (translationY < -100 && velocityY < -500 && !swipeProcessed) {
+      setSwipeProcessed(true);
+      const currentSize = settings.size;
+      if (currentSize > 0) {
+        updateSetting("size", (currentSize - 1) as any);
+      }
+    }
+
+    // Check if it's a downward swipe (positive translationY and velocity) and not processed yet
+    if (translationY > 100 && velocityY > 500 && !swipeProcessed) {
+      setSwipeProcessed(true);
+      const currentSize = settings.size;
+      if (currentSize < 4) {
+        updateSetting("size", (currentSize + 1) as any);
+      }
+    }
+  };
+
+  // Reset swipe processed flag when gesture ends
+  const onGestureEnd = () => {
+    setSwipeProcessed(false);
   };
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <PanGestureHandler onGestureEvent={onGestureEvent}>
+      <PanGestureHandler
+        onGestureEvent={onGestureEvent}
+        onHandlerStateChange={onGestureEnd}
+      >
         <View style={styles.container}>
           {/* Left side - touchable area for left item */}
           <TouchableWithoutFeedback onPress={handleLeftTouch}>
-            <View style={styles.leftSide}>
-              <Text style={styles.letter}>{items[leftItemIndex]}</Text>
+            <View
+              style={[
+                styles.leftSide,
+                { backgroundColor: currentColorScheme.background },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.letter,
+                  { color: currentColorScheme.letters, fontSize },
+                ]}
+              >
+                {items[leftItemIndex]}
+              </Text>
             </View>
           </TouchableWithoutFeedback>
 
           {/* Right side - touchable area for right item */}
           <TouchableWithoutFeedback onPress={handleRightTouch}>
-            <View style={styles.rightSide}>
-              <Text style={styles.letter}>{items[rightItemIndex]}</Text>
+            <View
+              style={[
+                styles.rightSide,
+                { backgroundColor: currentColorScheme.background },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.letter,
+                  { color: currentColorScheme.letters, fontSize },
+                ]}
+              >
+                {items[rightItemIndex]}
+              </Text>
             </View>
           </TouchableWithoutFeedback>
         </View>
