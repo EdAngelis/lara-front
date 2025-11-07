@@ -2,14 +2,14 @@ import React, { createContext, ReactNode, useContext, useState } from "react";
 
 export type GameMode = "assertive" | "comparison";
 export type GameType = "letter" | "number" | "shape";
-export type Difficulty = 0 | 1 | 2;
+export type Size = 0 | 1 | 2;
 
 export interface GameSettings {
   mode: GameMode;
   type: GameType;
-  difficulty: Difficulty;
-  random: boolean;
+  size: Size;
   colorScheme: string;
+  toPractice: string[];
 }
 
 interface SettingsContextType {
@@ -24,9 +24,9 @@ interface SettingsContextType {
 const defaultSettings: GameSettings = {
   mode: "assertive",
   type: "letter",
-  difficulty: 0,
-  random: false,
+  size: 0,
   colorScheme: "default",
+  toPractice: [],
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(

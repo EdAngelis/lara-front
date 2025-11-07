@@ -52,21 +52,75 @@ export default function ComparisonScreen() {
 
   // Function to generate new round with random items and target side
   const generateNewRound = useCallback(() => {
-    // Generate random indices for left and right items
-    const newLeftIndex = Math.floor(Math.random() * items.length);
-    let newRightIndex = Math.floor(Math.random() * items.length);
+    let newLeftIndex: number;
+    let newRightIndex: number;
+    let newTargetSide: "left" | "right";
 
-    // Ensure left and right items are different
-    while (newRightIndex === newLeftIndex) {
+    // Check if toPractice array has elements
+    if (settings.toPractice.length > 0) {
+      // Randomly choose one side to place the practice item
+      const practiceOnLeft = Math.random() < 0.5;
+
+      // Get a random item from toPractice array
+      const randomPracticeItem =
+        settings.toPractice[
+          Math.floor(Math.random() * settings.toPractice.length)
+        ];
+
+      // Find the index of this practice item in the items array
+      const practiceItemIndex = items.findIndex(
+        (item) => item === randomPracticeItem
+      );
+
+      if (practiceItemIndex !== -1) {
+        // Place practice item on chosen side
+        if (practiceOnLeft) {
+          newLeftIndex = practiceItemIndex;
+          // Generate random index for right side, ensuring it's different
+          newRightIndex = Math.floor(Math.random() * items.length);
+          while (newRightIndex === newLeftIndex) {
+            newRightIndex = Math.floor(Math.random() * items.length);
+          }
+          // Set target side to left since that's where the practice item is
+          newTargetSide = "left";
+        } else {
+          newRightIndex = practiceItemIndex;
+          // Generate random index for left side, ensuring it's different
+          newLeftIndex = Math.floor(Math.random() * items.length);
+          while (newLeftIndex === newRightIndex) {
+            newLeftIndex = Math.floor(Math.random() * items.length);
+          }
+          // Set target side to right since that's where the practice item is
+          newTargetSide = "right";
+        }
+      } else {
+        // Fallback: if practice item not found in items array, use random generation
+        newLeftIndex = Math.floor(Math.random() * items.length);
+        newRightIndex = Math.floor(Math.random() * items.length);
+        while (newRightIndex === newLeftIndex) {
+          newRightIndex = Math.floor(Math.random() * items.length);
+        }
+        // Use random target side for fallback
+        newTargetSide = Math.random() < 0.5 ? "left" : "right";
+      }
+    } else {
+      // toPractice is empty, use original random generation logic
+      newLeftIndex = Math.floor(Math.random() * items.length);
       newRightIndex = Math.floor(Math.random() * items.length);
+
+      // Ensure left and right items are different
+      while (newRightIndex === newLeftIndex) {
+        newRightIndex = Math.floor(Math.random() * items.length);
+      }
+
+      // Use random target side when no practice items
+      newTargetSide = Math.random() < 0.5 ? "left" : "right";
     }
 
     setLeftItemIndex(newLeftIndex);
     setRightItemIndex(newRightIndex);
-
-    // Randomly choose which side is the target
-    setTargetSide(Math.random() < 0.5 ? "left" : "right");
-  }, [items.length]);
+    setTargetSide(newTargetSide);
+  }, [items.length, items, settings.toPractice]);
 
   // Initialize first round when component mounts or items change
   useEffect(() => {

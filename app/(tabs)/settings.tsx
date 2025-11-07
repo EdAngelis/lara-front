@@ -1,21 +1,86 @@
 import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 
+import { Checkbox } from "@/components/Checkbox";
 import { ColorSchemePicker } from "@/components/ColorSchemePicker";
 import { RadioGroup } from "@/components/RadioGroup";
 import {
-  Difficulty,
   GameMode,
   GameType,
+  Size,
   useSettings,
 } from "@/components/SettingsContext";
 import { Text, useThemeColor, View } from "@/components/Themed";
-import { ToggleSwitch } from "@/components/ToggleSwitch";
 
 export default function SettingsScreen() {
   const { settings, updateSetting, resetSettings } = useSettings();
   const iconColor = useThemeColor({}, "text");
   const borderColor = useThemeColor({}, "tabIconDefault");
+
+  const letters = [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+  ];
+
+  const numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+  // Clear toPractice array when type changes
+  useEffect(() => {
+    updateSetting("toPractice", []);
+  }, [settings.type]);
+
+  const handleLetterToggle = (letter: string) => {
+    const currentPractice = settings.toPractice;
+    if (currentPractice.includes(letter)) {
+      // Remove letter from array
+      updateSetting(
+        "toPractice",
+        currentPractice.filter((l) => l !== letter)
+      );
+    } else {
+      // Add letter to array
+      updateSetting("toPractice", [...currentPractice, letter]);
+    }
+  };
+
+  const handleNumberToggle = (number: string) => {
+    const currentPractice = settings.toPractice;
+    if (currentPractice.includes(number)) {
+      // Remove number from array
+      updateSetting(
+        "toPractice",
+        currentPractice.filter((n) => n !== number)
+      );
+    } else {
+      // Add number to array
+      updateSetting("toPractice", [...currentPractice, number]);
+    }
+  };
 
   const gameModeOptions = [
     {
@@ -51,17 +116,17 @@ export default function SettingsScreen() {
   const difficultyOptions = [
     {
       label: "Easy",
-      value: 0 as Difficulty,
+      value: 0 as Size,
       description: "Simple patterns and basic concepts",
     },
     {
       label: "Medium",
-      value: 1 as Difficulty,
+      value: 1 as Size,
       description: "Moderate complexity challenges",
     },
     {
       label: "Hard",
-      value: 2 as Difficulty,
+      value: 2 as Size,
       description: "Advanced patterns and concepts",
     },
   ];
@@ -70,7 +135,7 @@ export default function SettingsScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Game Settings</Text>
+          <Text style={styles.title}>Settings</Text>
           <TouchableOpacity
             style={[styles.resetButton, { borderColor }]}
             onPress={resetSettings}
@@ -81,7 +146,7 @@ export default function SettingsScreen() {
         </View>
 
         <RadioGroup
-          title="Game Mode"
+          title="Mode"
           options={gameModeOptions}
           selectedValue={settings.mode}
           onValueChange={(value) => updateSetting("mode", value)}
@@ -91,7 +156,7 @@ export default function SettingsScreen() {
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
         <RadioGroup
-          title="Game Type"
+          title="Type"
           options={gameTypeOptions}
           selectedValue={settings.type}
           onValueChange={(value) => updateSetting("type", value)}
@@ -101,21 +166,14 @@ export default function SettingsScreen() {
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
         <RadioGroup
-          title="Difficulty Level"
+          title="Size Level"
           options={difficultyOptions}
-          selectedValue={settings.difficulty}
-          onValueChange={(value) => updateSetting("difficulty", value)}
+          selectedValue={settings.size}
+          onValueChange={(value) => updateSetting("size", value)}
           row
         />
 
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
-
-        <ToggleSwitch
-          title="Random Mode"
-          description="Randomize question order and patterns"
-          value={settings.random}
-          onValueChange={(value) => updateSetting("random", value)}
-        />
 
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
@@ -125,19 +183,69 @@ export default function SettingsScreen() {
           onValueChange={(value) => updateSetting("colorScheme", value)}
         />
 
+        <View style={[styles.separator, { backgroundColor: borderColor }]} />
+
+        {settings.type === "letter" && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Letters to Practice</Text>
+            <Text style={styles.sectionDescription}>
+              Select which letters you want to practice with
+            </Text>
+            <View style={styles.checkboxGrid}>
+              {letters.map((letter) => (
+                <Checkbox
+                  key={letter}
+                  label={letter}
+                  value={letter}
+                  checked={settings.toPractice.includes(letter)}
+                  onToggle={handleLetterToggle}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {settings.type === "number" && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Numbers to Practice</Text>
+            <Text style={styles.sectionDescription}>
+              Select which numbers you want to practice with
+            </Text>
+            <View style={styles.checkboxGrid}>
+              {numbers.map((number) => (
+                <Checkbox
+                  key={number}
+                  label={number}
+                  value={number}
+                  checked={settings.toPractice.includes(number)}
+                  onToggle={handleNumberToggle}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
         <View style={styles.settingsPreview}>
           <Text style={styles.previewTitle}>Current Settings</Text>
           <View style={styles.previewContent}>
             <Text style={styles.previewText}>Mode: {settings.mode}</Text>
             <Text style={styles.previewText}>Type: {settings.type}</Text>
             <Text style={styles.previewText}>
-              Difficulty: {["Easy", "Medium", "Hard"][settings.difficulty]}
-            </Text>
-            <Text style={styles.previewText}>
-              Random: {settings.random ? "Enabled" : "Disabled"}
+              Size: {["1", "2", "3"][settings.size]}
             </Text>
             <Text style={styles.previewText}>
               Color Scheme: {settings.colorScheme}
+            </Text>
+            <Text style={styles.previewText}>
+              {settings.type === "letter"
+                ? "Letters"
+                : settings.type === "number"
+                ? "Numbers"
+                : "Items"}{" "}
+              to Practice:{" "}
+              {settings.toPractice.length > 0
+                ? settings.toPractice.join(", ")
+                : "None selected"}
             </Text>
           </View>
         </View>
@@ -199,5 +307,23 @@ const styles = StyleSheet.create({
   previewText: {
     fontSize: 14,
     opacity: 0.8,
+  },
+  section: {
+    marginVertical: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginBottom: 16,
+  },
+  checkboxGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
 });
