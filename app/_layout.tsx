@@ -55,6 +55,14 @@ function RootLayoutNav() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+          <Stack.Screen
+            name="comparison"
+            options={{
+              headerShown: false,
+              orientation: "landscape",
+              animation: "slide_from_right",
+            }}
+          />
         </Stack>
       </ThemeProvider>
     </SettingsProvider>
