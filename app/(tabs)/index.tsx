@@ -14,26 +14,7 @@ export default function TabOneScreen() {
         <NavigationButton
           icon="play-circle"
           path="/comparison"
-          title="Start Game"
           backgroundColor="#4CAF50"
-        />
-        <NavigationButton
-          icon="trophy"
-          path="/leaderboard"
-          title="Leaderboard"
-          backgroundColor="#FF9800"
-        />
-        <NavigationButton
-          icon="book"
-          path="/tutorial"
-          title="Tutorial"
-          backgroundColor="#2196F3"
-        />
-        <NavigationButton
-          icon="stats-chart"
-          path="/statistics"
-          title="Statistics"
-          backgroundColor="#9C27B0"
         />
       </View>
       <TabToggleButton style={styles.floatingButton} />
@@ -49,7 +30,6 @@ const styles = StyleSheet.create({
   buttonGrid: {
     flex: 1,
     flexDirection: "row",
-    flexWrap: "wrap",
     alignItems: "stretch",
     justifyContent: "space-between",
     gap: 8,

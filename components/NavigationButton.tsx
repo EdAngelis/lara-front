@@ -62,8 +62,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 140,
-    minWidth: "45%",
-    maxWidth: "48%",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
