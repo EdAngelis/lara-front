@@ -1,14 +1,19 @@
 import { useSettings } from "@/components/SettingsContext";
 import { Text, View } from "@/components/Themed";
+import { QUAL_A_LETRA } from "@/constants/audios-references/qual-a-letra.constant";
 import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 import { router } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, StyleSheet, TouchableWithoutFeedback } from "react-native";
 import {
   GestureHandlerRootView,
   PanGestureHandler,
 } from "react-native-gesture-handler";
+import { Audio } from "expo-av";
+import { QUAL_O_NUMERO } from "@/constants/audios-references/qual-o-numero.constant";
+import { ESTA_E_A_LETRA } from "@/constants/audios-references/esta-e-a-letra.constant";
+import { ESTE_E_O_NUMERO } from "@/constants/audios-references/este-e-o-numero.constant";
+import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/constants/audios-references/correct_answers_phrases.constants";
 
 export default function ComparisonScreen() {
   // Get settings from context
@@ -61,27 +66,12 @@ export default function ComparisonScreen() {
   // Track if swipe has been processed to prevent multiple triggers
   const [swipeProcessed, setSwipeProcessed] = useState(false);
 
-  // Force landscape orientation when component mounts
-  useEffect(() => {
-    const lockOrientation = async () => {
-      await ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.LANDSCAPE
-      );
-    };
-
-    lockOrientation();
-
-    // Cleanup: unlock orientation when component unmounts
-    return () => {
-      ScreenOrientation.unlockAsync();
-    };
-  }, []);
-
   // Function to generate new round with random items and target side
   const generateNewRound = useCallback(() => {
     let newLeftIndex: number;
     let newRightIndex: number;
     let newTargetSide: "left" | "right";
+    let audioSource;
 
     // Check if toPractice array has elements
     if (settings.toPractice.length > 0) {
@@ -100,6 +90,10 @@ export default function ComparisonScreen() {
       );
 
       if (practiceItemIndex !== -1) {
+        audioSource =
+          settings.type === "letter"
+            ? QUAL_A_LETRA[practiceItemIndex].path || ""
+            : QUAL_O_NUMERO[practiceItemIndex].path || "";
         // Place practice item on chosen side
         if (practiceOnLeft) {
           newLeftIndex = practiceItemIndex;
@@ -129,6 +123,12 @@ export default function ComparisonScreen() {
         }
         // Use random target side for fallback
         newTargetSide = Math.random() < 0.5 ? "left" : "right";
+        const audioIndex =
+          newTargetSide === "left" ? newLeftIndex : newRightIndex;
+        audioSource =
+          settings.type === "letter"
+            ? QUAL_A_LETRA[practiceItemIndex].path || ""
+            : QUAL_O_NUMERO[practiceItemIndex].path || "";
       }
     } else {
       // toPractice is empty, use original random generation logic
@@ -142,44 +142,83 @@ export default function ComparisonScreen() {
 
       // Use random target side when no practice items
       newTargetSide = Math.random() < 0.5 ? "left" : "right";
+
+      const audioIndex =
+        newTargetSide === "left" ? newLeftIndex : newRightIndex;
+      audioSource =
+        settings.type === "letter"
+          ? QUAL_A_LETRA[audioIndex].path || ""
+          : QUAL_O_NUMERO[audioIndex].path || "";
     }
 
     setLeftItemIndex(newLeftIndex);
     setRightItemIndex(newRightIndex);
     setTargetSide(newTargetSide);
+
+    // Play audio using audioSource
+    if (audioSource) {
+      (async () => {
+        try {
+          const { sound } = await Audio.Sound.createAsync(audioSource);
+          await sound.playAsync();
+          // Unload sound after playing to free up resources
+          sound.setOnPlaybackStatusUpdate((status: any) => {
+            if (status.isLoaded && status.didJustFinish) {
+              sound.unloadAsync();
+            }
+          });
+        } catch (error) {
+          console.error("Error playing audio:", error);
+        }
+      })();
+    }
   }, [items.length, items, settings.toPractice]);
 
-  // Initialize first round when component mounts or items change
+  // Initialize first round when component mounts only
   useEffect(() => {
     generateNewRound();
-  }, [generateNewRound]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Game functions - check if user touched correct side
-  const handleLeftTouch = () => {
-    if (targetSide === "left") {
-      // Correct choice
-      Alert.alert("🎉 Correct!", "Great job! You chose the right side.", [
-        { text: "Next Round", onPress: generateNewRound },
-      ]);
-    } else {
-      // Wrong choice
-      Alert.alert("❌ Wrong!", "Oops! Try the other side next time.", [
-        { text: "Try Again", onPress: generateNewRound },
-      ]);
-    }
-  };
+  const handleSideTouch = (side: "left" | "right") => {
+    let audioSource;
+    if (targetSide === side) {
+      // sort random index from CORRECT_ANSWERS_PHRASES_AUDIO
+      const randomIndex = Math.floor(
+        Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length
+      );
 
-  const handleRightTouch = () => {
-    if (targetSide === "right") {
-      // Correct choice
-      Alert.alert("🎉 Correct!", "Great job! You chose the right side.", [
-        { text: "Next Round", onPress: generateNewRound },
-      ]);
+      audioSource = CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || "";
     } else {
-      // Wrong choice
-      Alert.alert("❌ Wrong!", "Oops! Try the other side next time.", [
-        { text: "Try Again", onPress: generateNewRound },
-      ]);
+      const audioIndex = targetSide === "left" ? rightItemIndex : leftItemIndex;
+      audioSource =
+        settings.type === "letter"
+          ? ESTA_E_A_LETRA[audioIndex].path || ""
+          : ESTE_E_O_NUMERO[audioIndex].path || "";
+    }
+
+    if (audioSource) {
+      (async () => {
+        try {
+          const { sound } = await Audio.Sound.createAsync(audioSource);
+          await sound.playAsync();
+          // Unload sound after playing to free up resources
+          sound.setOnPlaybackStatusUpdate((status: any) => {
+            if (status.isLoaded && status.didJustFinish) {
+              sound.unloadAsync();
+            }
+          });
+          // wait for audio to finish before call generaNewRound
+          sound.setOnPlaybackStatusUpdate((status: any) => {
+            if (status.isLoaded && status.didJustFinish) {
+              generateNewRound();
+            }
+          });
+        } catch (error) {
+          console.error("Error playing audio:", error);
+        }
+      })();
     }
   };
 
@@ -235,7 +274,7 @@ export default function ComparisonScreen() {
       >
         <View style={styles.container}>
           {/* Left side - touchable area for left item */}
-          <TouchableWithoutFeedback onPress={handleLeftTouch}>
+          <TouchableWithoutFeedback onPress={() => handleSideTouch("left")}>
             <View
               style={[
                 styles.leftSide,
@@ -254,7 +293,7 @@ export default function ComparisonScreen() {
           </TouchableWithoutFeedback>
 
           {/* Right side - touchable area for right item */}
-          <TouchableWithoutFeedback onPress={handleRightTouch}>
+          <TouchableWithoutFeedback onPress={() => handleSideTouch("right")}>
             <View
               style={[
                 styles.rightSide,
