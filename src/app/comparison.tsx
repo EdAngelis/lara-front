@@ -1,7 +1,7 @@
-import { useSettings } from "@/components/SettingsContext";
-import { Text, View } from "@/components/Themed";
-import { QUAL_A_LETRA } from "@/constants/audios-references/qual-a-letra.constant";
-import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
+import { useSettings } from "@/src/components/SettingsContext";
+import { Text, View } from "@/src/components/Themed";
+import { QUAL_A_LETRA } from "@/src/constants/audios-references/qual-a-letra.constant";
+import { COLOR_SCHEMES } from "@/src/constants/ColorSchemes";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, StyleSheet, TouchableWithoutFeedback } from "react-native";
@@ -10,11 +10,11 @@ import {
   PanGestureHandler,
 } from "react-native-gesture-handler";
 import { Audio } from "expo-av";
-import { QUAL_O_NUMERO } from "@/constants/audios-references/qual-o-numero.constant";
-import { ESTA_E_A_LETRA } from "@/constants/audios-references/esta-e-a-letra.constant";
-import { ESTE_E_O_NUMERO } from "@/constants/audios-references/este-e-o-numero.constant";
-import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/constants/audios-references/correct_answers_phrases.constants";
-import Shape from "@/components/shape";
+import { QUAL_O_NUMERO } from "@/src/constants/audios-references/qual-o-numero.constant";
+import { ESTA_E_A_LETRA } from "@/src/constants/audios-references/esta-e-a-letra.constant";
+import { ESTE_E_O_NUMERO } from "@/src/constants/audios-references/este-e-o-numero.constant";
+import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/src/constants/audios-references/correct_answers_phrases.constants";
+import Shape from "@/src/components/shape";
 
 export default function ComparisonScreen() {
   // Get settings from context

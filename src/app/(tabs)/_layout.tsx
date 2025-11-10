@@ -5,10 +5,10 @@ import React from "react";
 import {
   TabVisibilityProvider,
   useTabVisibility,
-} from "@/components/TabVisibilityContext";
-import { useClientOnlyValue } from "@/components/useClientOnlyValue";
-import { useColorScheme } from "@/components/useColorScheme";
-import Colors from "@/constants/Colors";
+} from "@/src/components/TabVisibilityContext";
+import { useClientOnlyValue } from "@/src/components/useClientOnlyValue";
+import { useColorScheme } from "@/src/components/useColorScheme";
+import Colors from "@/src/constants/Colors";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
