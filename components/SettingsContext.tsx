@@ -10,6 +10,7 @@ export interface GameSettings {
   size: Size;
   colorScheme: number;
   toPractice: string[];
+  onlySelected: boolean;
 }
 
 interface SettingsContextType {
@@ -27,6 +28,7 @@ const defaultSettings: GameSettings = {
   size: 2,
   colorScheme: 0,
   toPractice: [],
+  onlySelected: false,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(

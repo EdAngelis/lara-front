@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import { ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
 
 import { Checkbox } from "@/components/Checkbox";
 import { ColorSchemePicker } from "@/components/ColorSchemePicker";
@@ -196,25 +196,36 @@ export default function SettingsScreen() {
 
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
-        {settings.type === "letter" && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Letters to Practice</Text>
-            <Text style={styles.sectionDescription}>
-              Select which letters you want to practice with
-            </Text>
-            <View style={styles.checkboxGrid}>
-              {letters.map((letter) => (
-                <Checkbox
-                  key={letter}
-                  label={letter}
-                  value={letter}
-                  checked={settings.toPractice.includes(letter)}
-                  onToggle={handleLetterToggle}
-                />
-              ))}
-            </View>
+        <View style={styles.toggleSection}>
+          <View style={styles.toggleContent}>
+            <Text style={styles.sectionTitle}>Practice Only Selected</Text>
           </View>
-        )}
+          <Switch
+            value={settings.onlySelected}
+            onValueChange={(value) => updateSetting("onlySelected", value)}
+            trackColor={{ false: "#767577", true: "#81b0ff" }}
+            thumbColor={settings.onlySelected ? "#007AFF" : "#f4f3f4"}
+          />
+        </View>
+
+        <View style={[styles.separator, { backgroundColor: borderColor }]} />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Letters to Practice</Text>
+          <Text style={styles.sectionDescription}>
+            Select which letters you want to practice with
+          </Text>
+          <View style={styles.checkboxGrid}>
+            {letters.map((letter) => (
+              <Checkbox
+                key={letter}
+                label={letter}
+                value={letter}
+                checked={settings.toPractice.includes(letter)}
+                onToggle={handleLetterToggle}
+              />
+            ))}
+          </View>
+        </View>
 
         {settings.type === "number" && (
           <View style={styles.section}>
@@ -247,6 +258,9 @@ export default function SettingsScreen() {
             <Text style={styles.previewText}>
               Color Scheme:{" "}
               {COLOR_SCHEMES[settings.colorScheme]?.name || "Unknown"}
+            </Text>
+            <Text style={styles.previewText}>
+              Only Selected: {settings.onlySelected ? "Yes" : "No"}
             </Text>
             <Text style={styles.previewText}>
               {settings.type === "letter"
@@ -337,5 +351,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+  },
+  toggleSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 8,
+    gap: 16,
+  },
+  toggleContent: {
+    flex: 1,
   },
 });

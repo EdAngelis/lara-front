@@ -14,6 +14,7 @@ import { QUAL_O_NUMERO } from "@/constants/audios-references/qual-o-numero.const
 import { ESTA_E_A_LETRA } from "@/constants/audios-references/esta-e-a-letra.constant";
 import { ESTE_E_O_NUMERO } from "@/constants/audios-references/este-e-o-numero.constant";
 import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/constants/audios-references/correct_answers_phrases.constants";
+import Shape from "@/components/shape";
 
 export default function ComparisonScreen() {
   // Get settings from context
@@ -44,17 +45,28 @@ export default function ComparisonScreen() {
 
   // Create arrays based on type setting
   const items = useMemo(() => {
+    let allItems: string[] = [];
+
     if (settings.type === "number") {
       // Array of numbers 0-9 as strings for display
-      return Array.from({ length: 10 }, (_, i) => i.toString());
+      allItems = Array.from({ length: 10 }, (_, i) => i.toString());
     } else if (settings.type === "letter") {
       // Array of letters A-Z
-      return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      allItems = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    } else if (settings.type === "shape") {
+      allItems = ["square", "circle", "triangle", "rectangle", "star"];
     } else {
       // Default to letters if type is 'shape' or anything else
-      return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      allItems = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     }
-  }, [settings.type]);
+
+    // If onlySelected is true and there are items to practice, filter the array
+    if (settings.onlySelected && settings.toPractice.length > 0) {
+      return allItems.filter((item) => settings.toPractice.includes(item));
+    }
+
+    return allItems;
+  }, [settings.type, settings.onlySelected, settings.toPractice]);
 
   // State to keep track of left and right item indices
   const [leftItemIndex, setLeftItemIndex] = useState(0);
@@ -65,6 +77,12 @@ export default function ComparisonScreen() {
 
   // Track if swipe has been processed to prevent multiple triggers
   const [swipeProcessed, setSwipeProcessed] = useState(false);
+
+  // Track if user is currently swiping to prevent touch events
+  const [isSwiping, setIsSwiping] = useState(false);
+
+  // Track if audio is currently playing
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   // Function to generate new round with random items and target side
   const generateNewRound = useCallback(() => {
@@ -91,7 +109,9 @@ export default function ComparisonScreen() {
 
       if (practiceItemIndex !== -1) {
         audioSource =
-          settings.type === "letter"
+          settings.type === "shape"
+            ? null
+            : settings.type === "letter"
             ? QUAL_A_LETRA[practiceItemIndex].path || ""
             : QUAL_O_NUMERO[practiceItemIndex].path || "";
         // Place practice item on chosen side
@@ -126,7 +146,9 @@ export default function ComparisonScreen() {
         const audioIndex =
           newTargetSide === "left" ? newLeftIndex : newRightIndex;
         audioSource =
-          settings.type === "letter"
+          settings.type === "shape"
+            ? null
+            : settings.type === "letter"
             ? QUAL_A_LETRA[practiceItemIndex].path || ""
             : QUAL_O_NUMERO[practiceItemIndex].path || "";
       }
@@ -145,8 +167,11 @@ export default function ComparisonScreen() {
 
       const audioIndex =
         newTargetSide === "left" ? newLeftIndex : newRightIndex;
+
       audioSource =
-        settings.type === "letter"
+        settings.type === "shape"
+          ? null
+          : settings.type === "letter"
           ? QUAL_A_LETRA[audioIndex].path || ""
           : QUAL_O_NUMERO[audioIndex].path || "";
     }
@@ -182,6 +207,11 @@ export default function ComparisonScreen() {
 
   // Game functions - check if user touched correct side
   const handleSideTouch = (side: "left" | "right") => {
+    // Ignore touch if user is swiping or audio is playing
+    if (isSwiping || isAudioPlaying) {
+      return;
+    }
+
     let audioSource;
     if (targetSide === side) {
       // sort random index from CORRECT_ANSWERS_PHRASES_AUDIO
@@ -189,11 +219,16 @@ export default function ComparisonScreen() {
         Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length
       );
 
-      audioSource = CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || "";
+      audioSource =
+        settings.type === "shape"
+          ? null
+          : CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || "";
     } else {
       const audioIndex = targetSide === "left" ? rightItemIndex : leftItemIndex;
       audioSource =
-        settings.type === "letter"
+        settings.type === "shape"
+          ? null
+          : settings.type === "letter"
           ? ESTA_E_A_LETRA[audioIndex].path || ""
           : ESTE_E_O_NUMERO[audioIndex].path || "";
     }
@@ -201,24 +236,24 @@ export default function ComparisonScreen() {
     if (audioSource) {
       (async () => {
         try {
+          setIsAudioPlaying(true);
           const { sound } = await Audio.Sound.createAsync(audioSource);
           await sound.playAsync();
-          // Unload sound after playing to free up resources
+          // Single callback to handle both unload and next round
           sound.setOnPlaybackStatusUpdate((status: any) => {
             if (status.isLoaded && status.didJustFinish) {
               sound.unloadAsync();
-            }
-          });
-          // wait for audio to finish before call generaNewRound
-          sound.setOnPlaybackStatusUpdate((status: any) => {
-            if (status.isLoaded && status.didJustFinish) {
+              setIsAudioPlaying(false);
               generateNewRound();
             }
           });
         } catch (error) {
           console.error("Error playing audio:", error);
+          setIsAudioPlaying(false);
         }
       })();
+    } else {
+      generateNewRound();
     }
   };
 
@@ -226,6 +261,11 @@ export default function ComparisonScreen() {
   const onGestureEvent = (event: any) => {
     const { translationX, velocityX, translationY, velocityY } =
       event.nativeEvent;
+
+    // Mark as swiping if movement is detected
+    if (Math.abs(translationX) > 10 || Math.abs(translationY) > 10) {
+      setIsSwiping(true);
+    }
 
     // Check if it's a right swipe (positive translationX and velocity) and not processed yet
     if (translationX > 100 && velocityX > 500 && !swipeProcessed) {
@@ -264,6 +304,10 @@ export default function ComparisonScreen() {
   // Reset swipe processed flag when gesture ends
   const onGestureEnd = () => {
     setSwipeProcessed(false);
+    // Reset swiping state after a small delay to allow touch to be properly ignored
+    setTimeout(() => {
+      setIsSwiping(false);
+    }, 100);
   };
 
   return (
@@ -281,14 +325,34 @@ export default function ComparisonScreen() {
                 { backgroundColor: currentColorScheme.background },
               ]}
             >
-              <Text
-                style={[
-                  styles.letter,
-                  { color: currentColorScheme.letters, fontSize },
-                ]}
-              >
-                {items[leftItemIndex]}
-              </Text>
+              {settings.type === "shape" ? (
+                <>
+                  {targetSide === "left" ? (
+                    <Text>{items[leftItemIndex]}</Text>
+                  ) : null}
+                  <Shape
+                    shape={
+                      items[leftItemIndex] as
+                        | "square"
+                        | "circle"
+                        | "triangle"
+                        | "rectangle"
+                        | "star"
+                    }
+                    color={currentColorScheme.letters}
+                    size={settings.size}
+                  />
+                </>
+              ) : (
+                <Text
+                  style={[
+                    styles.letter,
+                    { color: currentColorScheme.letters, fontSize },
+                  ]}
+                >
+                  {items[leftItemIndex]}
+                </Text>
+              )}
             </View>
           </TouchableWithoutFeedback>
 
@@ -300,14 +364,34 @@ export default function ComparisonScreen() {
                 { backgroundColor: currentColorScheme.background },
               ]}
             >
-              <Text
-                style={[
-                  styles.letter,
-                  { color: currentColorScheme.letters, fontSize },
-                ]}
-              >
-                {items[rightItemIndex]}
-              </Text>
+              {settings.type === "shape" ? (
+                <>
+                  {targetSide === "right" ? (
+                    <Text>{items[leftItemIndex]}</Text>
+                  ) : null}
+                  <Shape
+                    shape={
+                      items[rightItemIndex] as
+                        | "square"
+                        | "circle"
+                        | "triangle"
+                        | "rectangle"
+                        | "star"
+                    }
+                    color={currentColorScheme.letters}
+                    size={settings.size}
+                  />
+                </>
+              ) : (
+                <Text
+                  style={[
+                    styles.letter,
+                    { color: currentColorScheme.letters, fontSize },
+                  ]}
+                >
+                  {items[rightItemIndex]}
+                </Text>
+              )}
             </View>
           </TouchableWithoutFeedback>
         </View>
