@@ -2,17 +2,17 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
 
-import { Checkbox } from "@/src/components/Checkbox";
-import { ColorSchemePicker } from "@/src/components/ColorSchemePicker";
-import { RadioGroup } from "@/src/components/RadioGroup";
+import { Checkbox } from "@/components/Checkbox";
+import { ColorSchemePicker } from "@/components/ColorSchemePicker";
+import { RadioGroup } from "@/components/RadioGroup";
 import {
   GameMode,
   GameType,
   Size,
   useSettings,
-} from "@/src/components/SettingsContext";
-import { Text, useThemeColor, View } from "@/src/components/Themed";
-import { COLOR_SCHEMES } from "@/src/constants/ColorSchemes";
+} from "@/components/SettingsContext";
+import { Text, useThemeColor, View } from "@/components/Themed";
+import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 
 export default function SettingsScreen() {
   const { settings, updateSetting, resetSettings } = useSettings();

@@ -4,12 +4,12 @@
     "slug": "lara-front",
     "version": "1.0.0",
     "orientation": "landscape",
-    "icon": "./assets/images/icon.png",
+    "icon": "./src/assets/images/icon.png",
     "scheme": "larafront",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./src/assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -22,7 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./src/assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -31,7 +31,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./src/assets/images/favicon.png"
     },
     "plugins": [
       "expo-router"
@@ -40,7 +40,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
+      "router": {
+        "origin": false,
+        "root": "./src/app"
+      },
       "eas": {
         "projectId": "c85a0783-8bbd-4d3a-97ab-e31864567b76"
       }

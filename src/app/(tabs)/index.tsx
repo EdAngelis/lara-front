@@ -1,9 +1,9 @@
 import { StyleSheet } from "react-native";
 
-import { NavigationButton } from "@/src/components/NavigationButton";
-import { TabToggleButton } from "@/src/components/TabToggleButton";
-import { useTabVisibility } from "@/src/components/TabVisibilityContext";
-import { View } from "@/src/components/Themed";
+import { NavigationButton } from "@/components/NavigationButton";
+import { TabToggleButton } from "@/components/TabToggleButton";
+import { useTabVisibility } from "@/components/TabVisibilityContext";
+import { View } from "@/components/Themed";
 
 export default function TabOneScreen() {
   const { isTabBarVisible } = useTabVisibility();

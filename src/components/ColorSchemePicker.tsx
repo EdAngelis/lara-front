@@ -1,4 +1,4 @@
-import { COLOR_SCHEMES } from "@/src/constants/ColorSchemes";
+import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 import React from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { Text, useThemeColor, View } from "./Themed";
