@@ -1,9 +1,6 @@
-export type LetterQuestionAudio = {
-  path: any;
-  reference: string;
-};
+import { AudioConstant } from "@/types/audio-constant";
 
-export const QUAL_A_LETRA: LetterQuestionAudio[] = [
+export const QUAL_A_LETRA: AudioConstant[] = [
   {
     reference: "a",
     path: require("@/assets/audio/qual-a-letra/qual-a-letra-a.mp3"),

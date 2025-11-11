@@ -1,6 +1,7 @@
 import Config from "react-native-config";
 
-const base_url = Config.BASE_URL || "http://192.168.10.216:3001";
+const base_url =
+  Config.BASE_URL || " https://fcfqqtkmw9.execute-api.us-east-1.amazonaws.com";
 const api_key = Config.API_KEY || "f00f3020932fddf";
 
 const defaultHeaders = {

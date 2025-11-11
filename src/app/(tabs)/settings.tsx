@@ -84,11 +84,11 @@ export default function SettingsScreen() {
   };
 
   const gameModeOptions = [
-    {
-      label: "Assertive Mode",
-      value: "assertive" as GameMode,
-      description: "Direct gameplay without comparisons",
-    },
+    // {
+    //   label: "Assertive Mode",
+    //   value: "assertive" as GameMode,
+    //   description: "Direct gameplay without comparisons",
+    // },
     {
       label: "Comparison Mode",
       value: "comparison" as GameMode,
