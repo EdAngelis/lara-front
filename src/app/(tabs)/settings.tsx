@@ -85,60 +85,60 @@ export default function SettingsScreen() {
 
   const gameModeOptions = [
     {
-      label: "Assertive Mode",
+      label: "Modo Assertivo",
       value: "assertive" as GameMode,
-      description: "Direct gameplay without comparisons",
+      description: "Jogo direto sem comparações",
     },
     {
-      label: "Comparison Mode",
+      label: "Modo Comparação",
       value: "comparison" as GameMode,
-      description: "Compare and choose between options",
+      description: "Compare e escolha entre as opções",
     },
   ];
 
   const gameTypeOptions = [
     {
-      label: "Letters",
+      label: "Letras",
       value: "letter" as GameType,
-      description: "Practice with alphabet letters",
+      description: "Pratique com letras do alfabeto",
     },
     {
-      label: "Numbers",
+      label: "Números",
       value: "number" as GameType,
-      description: "Practice with numeric values",
+      description: "Pratique com valores numéricos",
     },
     {
-      label: "Shapes",
+      label: "Formas",
       value: "shape" as GameType,
-      description: "Practice with geometric shapes",
+      description: "Pratique com formas geométricas",
     },
   ];
 
   const sizeOptions = [
     {
-      label: "Very Easy",
+      label: "Muito Fácil",
       value: 0 as Size,
-      description: "Simple patterns and basic concepts",
+      description: "Padrões simples e conceitos básicos",
     },
     {
-      label: "Easy",
+      label: "Fácil",
       value: 1 as Size,
-      description: "Simple patterns and basic concepts",
+      description: "Padrões simples e conceitos básicos",
     },
     {
-      label: "Medium",
+      label: "Médio",
       value: 2 as Size,
-      description: "Moderate complexity challenges",
+      description: "Desafios de complexidade moderada",
     },
     {
-      label: "Hard",
+      label: "Difícil",
       value: 3 as Size,
-      description: "Advanced patterns and concepts",
+      description: "Padrões e conceitos avançados",
     },
     {
-      label: "Very Hard",
+      label: "Muito Difícil",
       value: 4 as Size,
-      description: "Advanced patterns and concepts",
+      description: "Padrões e conceitos avançados",
     },
   ];
 
@@ -146,18 +146,18 @@ export default function SettingsScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
+          <Text style={styles.title}>Configurações</Text>
           <TouchableOpacity
             style={[styles.resetButton, { borderColor }]}
             onPress={resetSettings}
           >
             <Ionicons name="refresh" size={18} color={iconColor} />
-            <Text style={styles.resetText}>Reset</Text>
+            <Text style={styles.resetText}>Resetar</Text>
           </TouchableOpacity>
         </View>
 
         <RadioGroup
-          title="Mode"
+          title="Modo"
           options={gameModeOptions}
           selectedValue={settings.mode}
           onValueChange={(value) => updateSetting("mode", value)}
@@ -167,7 +167,7 @@ export default function SettingsScreen() {
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
         <RadioGroup
-          title="Type"
+          title="Tipo"
           options={gameTypeOptions}
           selectedValue={settings.type}
           onValueChange={(value) => updateSetting("type", value)}
@@ -177,7 +177,7 @@ export default function SettingsScreen() {
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
         <RadioGroup
-          title="Size Level"
+          title="Nível de Tamanho"
           options={sizeOptions}
           selectedValue={settings.size}
           onValueChange={(value) => updateSetting("size", value)}
@@ -189,7 +189,7 @@ export default function SettingsScreen() {
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
         <ColorSchemePicker
-          title="Color Scheme"
+          title="Esquema de Cores"
           selectedValue={settings.colorScheme}
           onValueChange={(value) => updateSetting("colorScheme", value)}
         />
@@ -198,7 +198,9 @@ export default function SettingsScreen() {
 
         <View style={styles.toggleSection}>
           <View style={styles.toggleContent}>
-            <Text style={styles.sectionTitle}>Practice Only Selected</Text>
+            <Text style={styles.sectionTitle}>
+              Praticar Apenas Selecionados
+            </Text>
           </View>
           <Switch
             value={settings.onlySelected}
@@ -207,31 +209,36 @@ export default function SettingsScreen() {
             thumbColor={settings.onlySelected ? "#007AFF" : "#f4f3f4"}
           />
         </View>
-
-        <View style={[styles.separator, { backgroundColor: borderColor }]} />
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Letters to Practice</Text>
-          <Text style={styles.sectionDescription}>
-            Select which letters you want to practice with
-          </Text>
-          <View style={styles.checkboxGrid}>
-            {letters.map((letter) => (
-              <Checkbox
-                key={letter}
-                label={letter}
-                value={letter}
-                checked={settings.toPractice.includes(letter)}
-                onToggle={handleLetterToggle}
-              />
-            ))}
-          </View>
-        </View>
+        {settings.type === "letter" && (
+          <>
+            <View
+              style={[styles.separator, { backgroundColor: borderColor }]}
+            />
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Letras para Praticar</Text>
+              <Text style={styles.sectionDescription}>
+                Selecione quais letras você quer praticar
+              </Text>
+              <View style={styles.checkboxGrid}>
+                {letters.map((letter) => (
+                  <Checkbox
+                    key={letter}
+                    label={letter}
+                    value={letter}
+                    checked={settings.toPractice.includes(letter)}
+                    onToggle={handleLetterToggle}
+                  />
+                ))}
+              </View>
+            </View>
+          </>
+        )}
 
         {settings.type === "number" && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Numbers to Practice</Text>
+            <Text style={styles.sectionTitle}>Números para Praticar</Text>
             <Text style={styles.sectionDescription}>
-              Select which numbers you want to practice with
+              Selecione quais números você quer praticar
             </Text>
             <View style={styles.checkboxGrid}>
               {numbers.map((number) => (
@@ -248,30 +255,30 @@ export default function SettingsScreen() {
         )}
 
         <View style={styles.settingsPreview}>
-          <Text style={styles.previewTitle}>Current Settings</Text>
+          <Text style={styles.previewTitle}>Configurações Atuais</Text>
           <View style={styles.previewContent}>
-            <Text style={styles.previewText}>Mode: {settings.mode}</Text>
-            <Text style={styles.previewText}>Type: {settings.type}</Text>
+            <Text style={styles.previewText}>Modo: {settings.mode}</Text>
+            <Text style={styles.previewText}>Tipo: {settings.type}</Text>
             <Text style={styles.previewText}>
-              Size: {["1", "2", "3"][settings.size]}
+              Tamanho: {["1", "2", "3"][settings.size]}
             </Text>
             <Text style={styles.previewText}>
-              Color Scheme:{" "}
-              {COLOR_SCHEMES[settings.colorScheme]?.name || "Unknown"}
+              Esquema de Cores:{" "}
+              {COLOR_SCHEMES[settings.colorScheme]?.name || "Desconhecido"}
             </Text>
             <Text style={styles.previewText}>
-              Only Selected: {settings.onlySelected ? "Yes" : "No"}
+              Apenas Selecionados: {settings.onlySelected ? "Sim" : "Não"}
             </Text>
             <Text style={styles.previewText}>
               {settings.type === "letter"
-                ? "Letters"
+                ? "Letras"
                 : settings.type === "number"
-                ? "Numbers"
-                : "Items"}{" "}
-              to Practice:{" "}
+                ? "Números"
+                : "Itens"}{" "}
+              para Praticar:{" "}
               {settings.toPractice.length > 0
                 ? settings.toPractice.join(", ")
-                : "None selected"}
+                : "Nenhum selecionado"}
             </Text>
           </View>
         </View>

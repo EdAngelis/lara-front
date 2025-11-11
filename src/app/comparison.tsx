@@ -15,10 +15,15 @@ import { ESTA_E_A_LETRA } from "@/constants/audios-references/esta-e-a-letra.con
 import { ESTE_E_O_NUMERO } from "@/constants/audios-references/este-e-o-numero.constant";
 import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/constants/audios-references/correct_answers_phrases.constants";
 import Shape from "@/components/shape";
-
+import { answersService } from "@/service/answers.service";
+import { AudioConstant } from "@/constants/audios-references/qual-a-letra.constant";
 export default function ComparisonScreen() {
   // Get settings from context
   const { settings, updateSetting } = useSettings();
+
+  const allLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const allNumbers = "0123456789".split("");
+  const allShapes = ["square", "circle", "triangle", "rectangle", "star"];
 
   // Get current color scheme based on settings
   const currentColorScheme = useMemo(() => {
@@ -29,15 +34,15 @@ export default function ComparisonScreen() {
   const fontSize = useMemo(() => {
     switch (settings.size) {
       case 0: // Easy
-        return 240;
+        return 320;
       case 1: // Medium
-        return 200;
+        return 280;
       case 2: // Hard
-        return 160;
+        return 240;
       case 3: // Very Hard
-        return 120;
+        return 200;
       case 4: // Extremely Hard
-        return 100;
+        return 160;
       default:
         return 160;
     }
@@ -49,15 +54,15 @@ export default function ComparisonScreen() {
 
     if (settings.type === "number") {
       // Array of numbers 0-9 as strings for display
-      allItems = Array.from({ length: 10 }, (_, i) => i.toString());
+      allItems = allNumbers;
     } else if (settings.type === "letter") {
       // Array of letters A-Z
-      allItems = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      allItems = allLetters;
     } else if (settings.type === "shape") {
-      allItems = ["square", "circle", "triangle", "rectangle", "star"];
+      allItems = allShapes;
     } else {
       // Default to letters if type is 'shape' or anything else
-      allItems = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      allItems = allLetters;
     }
 
     // If onlySelected is true and there are items to practice, filter the array
@@ -112,8 +117,12 @@ export default function ComparisonScreen() {
           settings.type === "shape"
             ? null
             : settings.type === "letter"
-            ? QUAL_A_LETRA[practiceItemIndex].path || ""
-            : QUAL_O_NUMERO[practiceItemIndex].path || "";
+            ? QUAL_A_LETRA.find(
+                (audio) => audio.reference.toUpperCase() === randomPracticeItem
+              )!.path || ""
+            : QUAL_O_NUMERO.find(
+                (audio) => audio.reference.toUpperCase() === randomPracticeItem
+              )?.path || "";
         // Place practice item on chosen side
         if (practiceOnLeft) {
           newLeftIndex = practiceItemIndex;
@@ -149,8 +158,12 @@ export default function ComparisonScreen() {
           settings.type === "shape"
             ? null
             : settings.type === "letter"
-            ? QUAL_A_LETRA[practiceItemIndex].path || ""
-            : QUAL_O_NUMERO[practiceItemIndex].path || "";
+            ? QUAL_A_LETRA.find(
+                (audio) => audio.reference.toUpperCase() === items[audioIndex]
+              )?.path || ""
+            : QUAL_O_NUMERO.find(
+                (audio) => audio.reference.toUpperCase() === items[audioIndex]
+              )?.path || "";
       }
     } else {
       // toPractice is empty, use original random generation logic
@@ -206,15 +219,28 @@ export default function ComparisonScreen() {
   }, []);
 
   // Game functions - check if user touched correct side
-  const handleSideTouch = (side: "left" | "right") => {
+  const handleSideTouch = async (side: "left" | "right") => {
     // Ignore touch if user is swiping or audio is playing
     if (isSwiping || isAudioPlaying) {
       return;
     }
 
+    try {
+      const resp = await answersService.createAnswer({
+        mode: settings.mode,
+        type: settings.type,
+        item: items[targetSide === "left" ? leftItemIndex : rightItemIndex],
+        result: side === targetSide ? 0 : 1,
+        size: settings.size,
+        colors: [currentColorScheme.background, currentColorScheme.letters],
+      });
+      console.log("Answer recorded:", resp);
+    } catch (error) {
+      console.error("Error in handleSideTouch:", error);
+    }
+
     let audioSource;
     if (targetSide === side) {
-      // sort random index from CORRECT_ANSWERS_PHRASES_AUDIO
       const randomIndex = Math.floor(
         Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length
       );
@@ -229,8 +255,12 @@ export default function ComparisonScreen() {
         settings.type === "shape"
           ? null
           : settings.type === "letter"
-          ? ESTA_E_A_LETRA[audioIndex].path || ""
-          : ESTE_E_O_NUMERO[audioIndex].path || "";
+          ? ESTA_E_A_LETRA.find(
+              (audio) => audio.reference.toUpperCase() === items[audioIndex]
+            )?.path || ""
+          : ESTE_E_O_NUMERO.find(
+              (audio) => audio.reference.toUpperCase() === items[audioIndex]
+            )?.path || "";
     }
 
     if (audioSource) {
