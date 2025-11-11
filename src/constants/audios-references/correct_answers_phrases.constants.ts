@@ -1,9 +1,6 @@
-export type PrasesAudio = {
-  reference: string;
-  path: any;
-};
+import { AudioConstant } from "@/types/audio-constant";
 
-export const CORRECT_ANSWERS_PHRASES_AUDIO: PrasesAudio[] = [
+export const CORRECT_ANSWERS_PHRASES_AUDIO: AudioConstant[] = [
   {
     reference: "acertou-que-tal-mais-uma",
     path: require("@/assets/audio/phrases/acertou-que-tal-mais-uma.mp3"),

@@ -10,6 +10,7 @@ interface NavigationButtonProps {
   title?: string;
   backgroundColor?: string;
   style?: any;
+  iconSize?: number;
 }
 
 export function NavigationButton({
@@ -18,6 +19,7 @@ export function NavigationButton({
   title,
   backgroundColor: customBackgroundColor,
   style,
+  iconSize = 250,
 }: NavigationButtonProps) {
   const defaultBackgroundColor = useThemeColor({}, "background");
   const textColor = useThemeColor({}, "text");
@@ -45,7 +47,12 @@ export function NavigationButton({
       activeOpacity={0.7}
     >
       <View style={[styles.content, { backgroundColor: "transparent" }]}>
-        <Ionicons name={icon} size={48} color={tintColor} style={styles.icon} />
+        <Ionicons
+          name={icon}
+          size={iconSize}
+          color={tintColor}
+          style={styles.icon}
+        />
         {title && (
           <Text style={[styles.title, { color: textColor }]}>{title}</Text>
         )}

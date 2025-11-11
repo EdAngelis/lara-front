@@ -1,22 +1,24 @@
 import { useSettings } from "@/components/SettingsContext";
+import Shape from "@/components/shape";
 import { Text, View } from "@/components/Themed";
+import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/constants/audios-references/correct_answers_phrases.constants";
+import { ESTA_E_A_LETRA } from "@/constants/audios-references/esta-e-a-letra.constant";
+import { ESTE_E_A_FORMA } from "@/constants/audios-references/este-e-a-forma.constant";
+import { ESTE_E_O_NUMERO } from "@/constants/audios-references/este-e-o-numero.constant";
+import { QUAL_A_FORMA } from "@/constants/audios-references/qual-a-forma.constant";
 import { QUAL_A_LETRA } from "@/constants/audios-references/qual-a-letra.constant";
+import { QUAL_O_NUMERO } from "@/constants/audios-references/qual-o-numero.constant";
 import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
+import { answersService } from "@/service/answers.service";
+import { Audio } from "expo-av";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { StyleSheet, TouchableWithoutFeedback } from "react-native";
 import {
   GestureHandlerRootView,
   PanGestureHandler,
 } from "react-native-gesture-handler";
-import { Audio } from "expo-av";
-import { QUAL_O_NUMERO } from "@/constants/audios-references/qual-o-numero.constant";
-import { ESTA_E_A_LETRA } from "@/constants/audios-references/esta-e-a-letra.constant";
-import { ESTE_E_O_NUMERO } from "@/constants/audios-references/este-e-o-numero.constant";
-import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/constants/audios-references/correct_answers_phrases.constants";
-import Shape from "@/components/shape";
-import { answersService } from "@/service/answers.service";
-import { AudioConstant } from "@/constants/audios-references/qual-a-letra.constant";
+
 export default function ComparisonScreen() {
   // Get settings from context
   const { settings, updateSetting } = useSettings();
@@ -115,7 +117,9 @@ export default function ComparisonScreen() {
       if (practiceItemIndex !== -1) {
         audioSource =
           settings.type === "shape"
-            ? null
+            ? QUAL_A_FORMA.find(
+                (audio) => audio.reference === randomPracticeItem
+              )?.path || null
             : settings.type === "letter"
             ? QUAL_A_LETRA.find(
                 (audio) => audio.reference.toUpperCase() === randomPracticeItem
@@ -156,7 +160,9 @@ export default function ComparisonScreen() {
           newTargetSide === "left" ? newLeftIndex : newRightIndex;
         audioSource =
           settings.type === "shape"
-            ? null
+            ? QUAL_A_FORMA.find(
+                (audio) => audio.reference === items[audioIndex]
+              )?.path || null
             : settings.type === "letter"
             ? QUAL_A_LETRA.find(
                 (audio) => audio.reference.toUpperCase() === items[audioIndex]
@@ -183,7 +189,8 @@ export default function ComparisonScreen() {
 
       audioSource =
         settings.type === "shape"
-          ? null
+          ? QUAL_A_FORMA.find((audio) => audio.reference === items[audioIndex])
+              ?.path || null
           : settings.type === "letter"
           ? QUAL_A_LETRA[audioIndex].path || ""
           : QUAL_O_NUMERO[audioIndex].path || "";
@@ -247,13 +254,15 @@ export default function ComparisonScreen() {
 
       audioSource =
         settings.type === "shape"
-          ? null
+          ? CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || ""
           : CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || "";
     } else {
       const audioIndex = targetSide === "left" ? rightItemIndex : leftItemIndex;
       audioSource =
         settings.type === "shape"
-          ? null
+          ? ESTE_E_A_FORMA.find(
+              (audio) => audio.reference === items[audioIndex]
+            )?.path || null
           : settings.type === "letter"
           ? ESTA_E_A_LETRA.find(
               (audio) => audio.reference.toUpperCase() === items[audioIndex]
@@ -357,9 +366,6 @@ export default function ComparisonScreen() {
             >
               {settings.type === "shape" ? (
                 <>
-                  {targetSide === "left" ? (
-                    <Text>{items[leftItemIndex]}</Text>
-                  ) : null}
                   <Shape
                     shape={
                       items[leftItemIndex] as
@@ -396,9 +402,6 @@ export default function ComparisonScreen() {
             >
               {settings.type === "shape" ? (
                 <>
-                  {targetSide === "right" ? (
-                    <Text>{items[leftItemIndex]}</Text>
-                  ) : null}
                   <Shape
                     shape={
                       items[rightItemIndex] as

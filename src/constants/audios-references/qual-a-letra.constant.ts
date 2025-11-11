@@ -1,7 +1,4 @@
-export type AudioConstant = {
-  path: any;
-  reference: string;
-};
+import { AudioConstant } from "@/types/audio-constant";
 
 export const QUAL_A_LETRA: AudioConstant[] = [
   {
