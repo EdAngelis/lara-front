@@ -5,7 +5,7 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 import { Text, useThemeColor, View } from "./Themed";
 
 interface NavigationButtonProps {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon?: keyof typeof Ionicons.glyphMap;
   path: string;
   title?: string;
   backgroundColor?: string;

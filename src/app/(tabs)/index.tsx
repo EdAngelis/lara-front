@@ -1,20 +1,30 @@
 import { StyleSheet } from "react-native";
 
 import { NavigationButton } from "@/components/NavigationButton";
+import { useSettings } from "@/components/SettingsContext";
 import { TabToggleButton } from "@/components/TabToggleButton";
-import { useTabVisibility } from "@/components/TabVisibilityContext";
 import { View } from "@/components/Themed";
+import { useMemo } from "react";
 
 export default function TabOneScreen() {
-  const { isTabBarVisible } = useTabVisibility();
+  const { settings } = useSettings();
+
+  const gamePath = useMemo(() => {
+    return settings.mode === "comparison" ? "/comparison" : "/assertive";
+  }, [settings.mode]);
 
   return (
     <View style={styles.container}>
       <View style={styles.buttonGrid}>
         <NavigationButton
-          icon="play-circle"
-          path="/comparison"
+          //icon="play-circle"
+          path={gamePath}
           backgroundColor="#4CAF50"
+        />
+        <NavigationButton
+          //icon="bar-chart"
+          path="/countShapes"
+          backgroundColor="#ff5e00ff"
         />
       </View>
       <TabToggleButton style={styles.floatingButton} />
