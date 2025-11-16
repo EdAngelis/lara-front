@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { Text, useThemeColor, View } from "./Themed";
+import Shape from "./shape";
 
 interface NavigationButtonProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -11,6 +12,8 @@ interface NavigationButtonProps {
   backgroundColor?: string;
   style?: any;
   iconSize?: number;
+  shape?: "square" | "circle" | "triangle" | "rectangle" | "star";
+  qt?: number;
 }
 
 export function NavigationButton({
@@ -20,6 +23,8 @@ export function NavigationButton({
   backgroundColor: customBackgroundColor,
   style,
   iconSize = 250,
+  shape,
+  qt,
 }: NavigationButtonProps) {
   const defaultBackgroundColor = useThemeColor({}, "background");
   const textColor = useThemeColor({}, "text");
@@ -47,12 +52,22 @@ export function NavigationButton({
       activeOpacity={0.7}
     >
       <View style={[styles.content, { backgroundColor: "transparent" }]}>
-        <Ionicons
-          name={icon}
-          size={iconSize}
-          color={tintColor}
-          style={styles.icon}
-        />
+        {shape ? (
+          <View style={styles.shapeContainer}>
+            {Array.from({ length: qt || 1 }).map((_, index) => (
+              <Shape key={index} shape={shape} color={tintColor} size={2} />
+            ))}
+          </View>
+        ) : (
+          icon && (
+            <Ionicons
+              name={icon}
+              size={iconSize}
+              color={tintColor}
+              style={styles.icon}
+            />
+          )
+        )}
         {title && (
           <Text style={[styles.title, { color: textColor }]}>{title}</Text>
         )}
@@ -85,6 +100,15 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginBottom: 12,
+  },
+  shapeContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,
+    marginBottom: 12,
+    backgroundColor: "transparent",
   },
   title: {
     fontSize: 16,

@@ -18,14 +18,15 @@ export default function TabOneScreen() {
       <View style={styles.buttonGrid}>
         <NavigationButton
           //icon="play-circle"
+          shape="square"
+          qt={settings.mode === "comparison" ? 2 : 1}
           path={gamePath}
           backgroundColor="#4CAF50"
         />
-        <NavigationButton
-          //icon="bar-chart"
+        {/* <NavigationButton
           path="/countShapes"
           backgroundColor="#ff5e00ff"
-        />
+        /> */}
       </View>
       <TabToggleButton style={styles.floatingButton} />
     </View>
