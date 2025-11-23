@@ -71,6 +71,14 @@ function RootLayoutNav() {
               animation: "slide_from_right",
             }}
           />
+          <Stack.Screen
+            name="countShapes"
+            options={{
+              headerShown: false,
+              orientation: "landscape",
+              animation: "slide_from_right",
+            }}
+          />
         </Stack>
       </ThemeProvider>
     </SettingsProvider>

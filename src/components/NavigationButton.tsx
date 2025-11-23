@@ -10,6 +10,7 @@ interface NavigationButtonProps {
   path: string;
   title?: string;
   backgroundColor?: string;
+  iconColor?: string;
   style?: any;
   iconSize?: number;
   shape?: "square" | "circle" | "triangle" | "rectangle" | "star";
@@ -21,6 +22,7 @@ export function NavigationButton({
   path,
   title,
   backgroundColor: customBackgroundColor,
+  iconColor,
   style,
   iconSize = 250,
   shape,
@@ -33,6 +35,8 @@ export function NavigationButton({
 
   const buttonBackgroundColor =
     customBackgroundColor || defaultBackgroundColor + "90";
+
+  const iconActualColor = iconColor || tintColor;
 
   const handlePress = () => {
     router.push(path as any);
@@ -55,7 +59,12 @@ export function NavigationButton({
         {shape ? (
           <View style={styles.shapeContainer}>
             {Array.from({ length: qt || 1 }).map((_, index) => (
-              <Shape key={index} shape={shape} color={tintColor} size={2} />
+              <Shape
+                key={index}
+                shape={shape}
+                color={iconActualColor}
+                size={3}
+              />
             ))}
           </View>
         ) : (

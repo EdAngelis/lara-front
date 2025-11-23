@@ -22,11 +22,14 @@ export default function TabOneScreen() {
           qt={settings.numberOfItems}
           path={gamePath}
           backgroundColor="#0d0098ff"
+          iconColor="#d0ff00ff"
         />
-        {/* <NavigationButton
+        <NavigationButton
+          shape="circle"
           path="/countShapes"
           backgroundColor="#ff5e00ff"
-        /> */}
+          iconColor="#ffff00ff"
+        />
       </View>
       <TabToggleButton style={styles.floatingButton} />
     </View>
