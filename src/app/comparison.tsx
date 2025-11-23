@@ -361,45 +361,113 @@ export default function ComparisonScreen() {
         onGestureEvent={onGestureEvent}
         onHandlerStateChange={onGestureEnd}
       >
-        <View style={styles.container}>
-          {itemsIndices.map((itemIdx, i) => (
-            <TouchableWithoutFeedback
-              key={i}
-              onPress={() => handleSideTouch(i)}
-            >
-              <View
-                style={[
-                  styles.slot,
-                  i > 0 ? styles.slotDivider : null,
-                  { backgroundColor: currentColorScheme.background },
-                ]}
-              >
-                {settings.type === "shape" ? (
-                  <Shape
-                    shape={
-                      items[itemIdx] as
-                        | "square"
-                        | "circle"
-                        | "triangle"
-                        | "rectangle"
-                        | "star"
-                    }
-                    color={currentColorScheme.letters}
-                    size={settings.size}
-                  />
-                ) : (
-                  <Text
+        <View
+          style={
+            (settings as any).numberOfItems === 4
+              ? [styles.container, styles.gridContainer]
+              : styles.container
+          }
+        >
+          {(settings as any).numberOfItems === 4
+            ? // Render a 2x2 grid: two rows with two slots each
+              (() => {
+                const rows: number[][] = [
+                  itemsIndices.slice(0, 2),
+                  itemsIndices.slice(2, 4),
+                ];
+                return rows.map((rowItems, rowIdx) => (
+                  <View
+                    key={rowIdx}
+                    style={[styles.row, rowIdx > 0 ? styles.rowDivider : null]}
+                  >
+                    {rowItems.map((itemIdx, colIdx) => {
+                      const globalIndex = rowIdx * 2 + colIdx;
+                      return (
+                        <TouchableWithoutFeedback
+                          key={globalIndex}
+                          onPress={() => handleSideTouch(globalIndex)}
+                        >
+                          <View
+                            style={[
+                              styles.slot,
+                              colIdx > 0 ? styles.slotDivider : null,
+                              {
+                                backgroundColor: currentColorScheme.background,
+                              },
+                            ]}
+                          >
+                            {settings.type === "shape" ? (
+                              <Shape
+                                shape={
+                                  items[itemIdx] as
+                                    | "square"
+                                    | "circle"
+                                    | "triangle"
+                                    | "rectangle"
+                                    | "star"
+                                }
+                                color={currentColorScheme.letters}
+                                size={settings.size}
+                              />
+                            ) : (
+                              <Text
+                                style={[
+                                  styles.letter,
+                                  {
+                                    color: currentColorScheme.letters,
+                                    fontSize,
+                                  },
+                                ]}
+                              >
+                                {items[itemIdx]}
+                              </Text>
+                            )}
+                          </View>
+                        </TouchableWithoutFeedback>
+                      );
+                    })}
+                  </View>
+                ));
+              })()
+            : // Fallback: single row layout for 1/2/3 items
+              itemsIndices.map((itemIdx, i) => (
+                <TouchableWithoutFeedback
+                  key={i}
+                  onPress={() => handleSideTouch(i)}
+                >
+                  <View
                     style={[
-                      styles.letter,
-                      { color: currentColorScheme.letters, fontSize },
+                      styles.slot,
+                      i > 0 ? styles.slotDivider : null,
+                      { backgroundColor: currentColorScheme.background },
                     ]}
                   >
-                    {items[itemIdx]}
-                  </Text>
-                )}
-              </View>
-            </TouchableWithoutFeedback>
-          ))}
+                    {settings.type === "shape" ? (
+                      <Shape
+                        shape={
+                          items[itemIdx] as
+                            | "square"
+                            | "circle"
+                            | "triangle"
+                            | "rectangle"
+                            | "star"
+                        }
+                        color={currentColorScheme.letters}
+                        size={settings.size}
+                      />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.letter,
+                          { color: currentColorScheme.letters, fontSize },
+                        ]}
+                      >
+                        {items[itemIdx]}
+                      </Text>
+                    )}
+                  </View>
+                </TouchableWithoutFeedback>
+              ))}
         </View>
       </PanGestureHandler>
     </GestureHandlerRootView>
@@ -437,5 +505,16 @@ const styles = StyleSheet.create({
   slotDivider: {
     borderLeftWidth: 2,
     borderLeftColor: "rgba(255, 255, 255, 0.2)",
+  },
+  gridContainer: {
+    flexDirection: "column",
+  },
+  row: {
+    flex: 1,
+    flexDirection: "row",
+  },
+  rowDivider: {
+    borderTopWidth: 2,
+    borderTopColor: "rgba(255, 255, 255, 0.2)",
   },
 });
