@@ -222,7 +222,7 @@ export default function ComparisonScreen() {
 
     try {
       const resp = await answersService.createAnswer({
-        mode: settings.mode,
+        numberOfItems: settings.numberOfItems,
         type: settings.type,
         item: items[itemsIndices[targetIndex]],
         result: index === targetIndex ? 0 : 1,

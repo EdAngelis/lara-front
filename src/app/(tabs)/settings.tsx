@@ -5,12 +5,7 @@ import { ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
 import { Checkbox } from "@/components/Checkbox";
 import { ColorSchemePicker } from "@/components/ColorSchemePicker";
 import { RadioGroup } from "@/components/RadioGroup";
-import {
-  GameMode,
-  GameType,
-  Size,
-  useSettings,
-} from "@/components/SettingsContext";
+import { GameType, Size, useSettings } from "@/components/SettingsContext";
 import { Text, useThemeColor, View } from "@/components/Themed";
 import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 
@@ -83,19 +78,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const gameModeOptions = [
-    {
-      label: "Assertive Mode",
-      value: "assertive" as GameMode,
-      description: "Direct gameplay without comparisons",
-    },
-    {
-      label: "Modo Comparação",
-      value: "comparison" as GameMode,
-      description: "Compare e escolha entre as opções",
-    },
-  ];
-
   const gameTypeOptions = [
     {
       label: "Letras",
@@ -143,6 +125,7 @@ export default function SettingsScreen() {
   ];
 
   const numberOfItemsOptions = [
+    { label: "1 Item", value: 1 as 1 },
     { label: "2 Itens", value: 2 as 2 },
     { label: "3 Itens", value: 3 as 3 },
     { label: "4 Itens", value: 4 as 4 },
@@ -162,15 +145,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <RadioGroup
-          title="Modo"
-          options={gameModeOptions}
-          selectedValue={settings.mode}
-          onValueChange={(value) => updateSetting("mode", value)}
-          row
-        />
-
-        <View style={[styles.separator, { backgroundColor: borderColor }]} />
+        {/* Mode selection removed */}
 
         <RadioGroup
           title="Tipo"
@@ -291,7 +266,7 @@ export default function SettingsScreen() {
         <View style={styles.settingsPreview}>
           <Text style={styles.previewTitle}>Configurações Atuais</Text>
           <View style={styles.previewContent}>
-            <Text style={styles.previewText}>Modo: {settings.mode}</Text>
+            {/* Mode removed from settings */}
             <Text style={styles.previewText}>Tipo: {settings.type}</Text>
             <Text style={styles.previewText}>
               Tamanho: {["1", "2", "3"][settings.size]}

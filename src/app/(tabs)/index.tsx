@@ -10,8 +10,8 @@ export default function TabOneScreen() {
   const { settings } = useSettings();
 
   const gamePath = useMemo(() => {
-    return settings.mode === "comparison" ? "/comparison" : "/assertive";
-  }, [settings.mode]);
+    return "/comparison";
+  }, [settings.numberOfItems]);
 
   return (
     <View style={styles.container}>
@@ -19,9 +19,9 @@ export default function TabOneScreen() {
         <NavigationButton
           //icon="play-circle"
           shape="square"
-          qt={settings.mode === "comparison" ? 2 : 1}
+          qt={settings.numberOfItems}
           path={gamePath}
-          backgroundColor="#4CAF50"
+          backgroundColor="#0d0098ff"
         />
         {/* <NavigationButton
           path="/countShapes"

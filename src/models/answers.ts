@@ -1,6 +1,6 @@
 export interface Answers {
   userId?: string;
-  mode: "comparison" | "assertive";
+  numberOfItems: 1 | 2 | 3 | 4;
   type: "letter" | "number" | "shape";
   item: string;
   result: 0 | 1;

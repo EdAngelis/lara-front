@@ -154,7 +154,7 @@ export default function AssertiveScreen() {
 
     try {
       await answersService.createAnswer({
-        mode: settings.mode,
+        numberOfItems: settings.numberOfItems,
         type: settings.type,
         item: items[currentItemIndex],
         result: 0, // No right/wrong in assertive mode

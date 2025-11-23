@@ -1,18 +1,16 @@
 import React, { createContext, ReactNode, useContext, useState } from "react";
 
-export type GameMode = "assertive" | "comparison";
 export type GameType = "letter" | "number" | "shape";
 export type Size = 0 | 1 | 2 | 3 | 4;
 
 export interface GameSettings {
-  mode: GameMode;
   type: GameType;
   size: Size;
   colorScheme: number;
   toPractice: string[];
   onlySelected: boolean;
   audio: boolean;
-  numberOfItems: 2 | 3 | 4;
+  numberOfItems: 1 | 2 | 3 | 4;
 }
 
 interface SettingsContextType {
@@ -25,7 +23,6 @@ interface SettingsContextType {
 }
 
 const defaultSettings: GameSettings = {
-  mode: "assertive",
   type: "letter",
   size: 2,
   colorScheme: 0,
