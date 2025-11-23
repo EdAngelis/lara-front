@@ -1,6 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
-import { ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+} from "react-native";
 
 import { Checkbox } from "@/components/Checkbox";
 import { ColorSchemePicker } from "@/components/ColorSchemePicker";
@@ -131,6 +137,23 @@ export default function SettingsScreen() {
     { label: "4 Itens", value: 4 as 4 },
   ];
 
+  const handleOnlySelectedToggle = (value: boolean) => {
+    if (settings.toPractice.length < settings.numberOfItems) {
+      Alert.alert(
+        "Aviso",
+        "Número selecionado menor que número de itens a exibir",
+        [
+          {
+            text: "OK",
+            onPress: () => {},
+          },
+        ]
+      );
+      return;
+    }
+    updateSetting("onlySelected", value);
+  };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
@@ -144,7 +167,20 @@ export default function SettingsScreen() {
             <Text style={styles.resetText}>Resetar</Text>
           </TouchableOpacity>
         </View>
-
+        <View style={styles.toggleSection}>
+          <View style={styles.toggleContent}>
+            <Text style={styles.sectionTitle}>Áudio</Text>
+            <Text style={styles.sectionDescription}>
+              Ativa ou desativa a reprodução de áudio durante o jogo
+            </Text>
+          </View>
+          <Switch
+            value={(settings as any).audio}
+            onValueChange={(value) => updateSetting("audio", value as any)}
+            trackColor={{ false: "#767577", true: "#81b0ff" }}
+            thumbColor={(settings as any).audio ? "#007AFF" : "#f4f3f4"}
+          />
+        </View>
         {/* Mode selection removed */}
 
         <RadioGroup
@@ -158,22 +194,22 @@ export default function SettingsScreen() {
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
         <RadioGroup
-          title="Nível de Tamanho"
-          options={sizeOptions}
-          selectedValue={settings.size}
-          onValueChange={(value) => updateSetting("size", value)}
-          row
-        />
-
-        <View style={[styles.separator, { backgroundColor: borderColor }]} />
-
-        <RadioGroup
           title="Número de Itens"
           options={numberOfItemsOptions}
           selectedValue={(settings as any).numberOfItems}
           onValueChange={(value) =>
             updateSetting("numberOfItems", value as any)
           }
+          row
+        />
+
+        <View style={[styles.separator, { backgroundColor: borderColor }]} />
+
+        <RadioGroup
+          title="Nível de Tamanho"
+          options={sizeOptions}
+          selectedValue={settings.size}
+          onValueChange={(value) => updateSetting("size", value)}
           row
         />
 
@@ -197,27 +233,13 @@ export default function SettingsScreen() {
           </View>
           <Switch
             value={settings.onlySelected}
-            onValueChange={(value) => updateSetting("onlySelected", value)}
+            onValueChange={(value) => handleOnlySelectedToggle(value)}
             trackColor={{ false: "#767577", true: "#81b0ff" }}
             thumbColor={settings.onlySelected ? "#007AFF" : "#f4f3f4"}
           />
         </View>
         <View style={[styles.separator, { backgroundColor: borderColor }]} />
 
-        <View style={styles.toggleSection}>
-          <View style={styles.toggleContent}>
-            <Text style={styles.sectionTitle}>Áudio</Text>
-            <Text style={styles.sectionDescription}>
-              Ativa ou desativa a reprodução de áudio durante o jogo
-            </Text>
-          </View>
-          <Switch
-            value={(settings as any).audio}
-            onValueChange={(value) => updateSetting("audio", value as any)}
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={(settings as any).audio ? "#007AFF" : "#f4f3f4"}
-          />
-        </View>
         {settings.type === "letter" && (
           <>
             <View
