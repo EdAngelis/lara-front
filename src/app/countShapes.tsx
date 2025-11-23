@@ -2,12 +2,18 @@ import { useSettings } from "@/components/SettingsContext";
 import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 import { Audio } from "expo-av";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import {
+  Animated,
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import {
   GestureHandlerRootView,
-  LongPressGestureHandler,
   PanGestureHandler,
   State,
+  TapGestureHandler,
 } from "react-native-gesture-handler";
 
 export default function CountShapes() {
@@ -42,6 +48,21 @@ export default function CountShapes() {
   const [positions, setPositions] = useState<
     { left: number; top: number; id: number }[]
   >([]);
+
+  // animated scale refs per circle
+  const scalesRef = useRef<Animated.Value[]>([]);
+  const animRefs = useRef<(Animated.CompositeAnimation | null)[]>([]);
+
+  // ensure scales length matches count
+  useEffect(() => {
+    if (scalesRef.current.length !== count) {
+      scalesRef.current = Array.from(
+        { length: count },
+        () => new Animated.Value(1)
+      );
+      animRefs.current = Array.from({ length: count }, () => null);
+    }
+  }, [count]);
 
   const soundRef = useRef<any>(null);
 
@@ -152,6 +173,57 @@ export default function CountShapes() {
     setPositions((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const startPulse = (index: number) => {
+    const scale = scalesRef.current[index];
+    if (!scale) return;
+    if (animRefs.current[index]) {
+      try {
+        animRefs.current[index]?.stop();
+      } catch (e) {}
+    }
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.12,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 0.96,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animRefs.current[index] = animation;
+    animation.start();
+  };
+
+  const stopPulse = (index: number) => {
+    const scale = scalesRef.current[index];
+    if (!scale) return;
+    const animation = animRefs.current[index];
+    if (animation) {
+      try {
+        animation.stop();
+      } catch (e) {}
+      animRefs.current[index] = null;
+    }
+    Animated.timing(scale, {
+      toValue: 1,
+      duration: 120,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const startPulseAll = () => {
+    for (let i = 0; i < scalesRef.current.length; i++) startPulse(i);
+  };
+
+  const stopPulseAll = () => {
+    for (let i = 0; i < scalesRef.current.length; i++) stopPulse(i);
+  };
+
   useEffect(() => {
     // Generate positions only when count or layout changes (not on size change)
     const newPos = generatePositions(count, width, height, circleSize, 8);
@@ -259,10 +331,9 @@ export default function CountShapes() {
     setTimeout(() => setSwipeProcessed(false), 120);
   };
 
-  // long press (2s) -> regenerate positions
-  const onLongPressStateChange = (event: any) => {
+  // double-tap (2 taps) -> regenerate positions
+  const onDoubleTapStateChange = (event: any) => {
     if (event.nativeEvent.state === State.ACTIVE) {
-      // regenerate positions explicitly using current size/layout
       const newPos = generatePositions(count, width, height, circleSize, 8);
       setPositions(newPos);
     }
@@ -275,36 +346,49 @@ export default function CountShapes() {
         { backgroundColor: colorScheme.background || "#FFFFFF" },
       ]}
     >
-      <LongPressGestureHandler
-        minDurationMs={2000}
-        onHandlerStateChange={onLongPressStateChange}
+      <TapGestureHandler
+        numberOfTaps={3}
+        maxDelayMs={300}
+        onHandlerStateChange={onDoubleTapStateChange}
       >
         <PanGestureHandler
           onGestureEvent={onGestureEvent}
           onHandlerStateChange={onHandlerStateChange}
         >
-          <View style={styles.container}>
-            {positions.map((p) => (
-              <Pressable
-                key={p.id}
-                onPress={() => handleRemove(p.id)}
-                style={({ pressed }) => [
-                  styles.circle,
-                  {
-                    left: p.left,
-                    top: p.top,
-                    backgroundColor: circleColor,
-                    width: circleSize,
-                    height: circleSize,
-                    borderRadius: circleSize / 2,
-                    opacity: pressed ? 0.6 : 1,
-                  },
-                ]}
-              />
-            ))}
+          <View
+            style={styles.container}
+            onTouchStart={() => startPulseAll()}
+            onTouchEnd={() => stopPulseAll()}
+            onTouchCancel={() => stopPulseAll()}
+          >
+            {positions.map((p) => {
+              const scale = scalesRef.current[p.id] ?? new Animated.Value(1);
+              return (
+                <Animated.View
+                  key={p.id}
+                  style={[
+                    styles.circle,
+                    {
+                      left: p.left,
+                      top: p.top,
+                      backgroundColor: circleColor,
+                      width: circleSize,
+                      height: circleSize,
+                      borderRadius: circleSize / 2,
+                      transform: [{ scale }],
+                    },
+                  ]}
+                >
+                  <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() => handleRemove(p.id)}
+                  />
+                </Animated.View>
+              );
+            })}
           </View>
         </PanGestureHandler>
-      </LongPressGestureHandler>
+      </TapGestureHandler>
     </GestureHandlerRootView>
   );
 }
