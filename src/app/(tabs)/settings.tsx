@@ -137,6 +137,18 @@ export default function SettingsScreen() {
     { label: "4 Itens", value: 4 as 4 },
   ];
 
+  const numberOfCirclesOptions = [
+    { label: "1", value: 1 as 1 },
+    { label: "2", value: 2 as 2 },
+    { label: "3", value: 3 as 3 },
+    { label: "4", value: 4 as 4 },
+    { label: "5", value: 5 as 5 },
+    { label: "6", value: 6 as 6 },
+    { label: "7", value: 7 as 7 },
+    { label: "8", value: 8 as 8 },
+    { label: "9", value: 9 as 9 },
+  ];
+
   const handleOnlySelectedToggle = (value: boolean) => {
     if (settings.toPractice.length < settings.numberOfItems) {
       Alert.alert(
@@ -199,6 +211,18 @@ export default function SettingsScreen() {
           selectedValue={(settings as any).numberOfItems}
           onValueChange={(value) =>
             updateSetting("numberOfItems", value as any)
+          }
+          row
+        />
+
+        <View style={[styles.separator, { backgroundColor: borderColor }]} />
+
+        <RadioGroup
+          title="Número de Círculos"
+          options={numberOfCirclesOptions}
+          selectedValue={(settings as any).numberOfCircles}
+          onValueChange={(value) =>
+            updateSetting("numberOfCircles", value as any)
           }
           row
         />

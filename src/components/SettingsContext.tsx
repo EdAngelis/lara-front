@@ -11,6 +11,7 @@ export interface GameSettings {
   onlySelected: boolean;
   audio: boolean;
   numberOfItems: 1 | 2 | 3 | 4;
+  numberOfCircles: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 }
 
 interface SettingsContextType {
@@ -30,6 +31,7 @@ const defaultSettings: GameSettings = {
   onlySelected: false,
   audio: true,
   numberOfItems: 2,
+  numberOfCircles: 3,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
