@@ -11,130 +11,136 @@ import { QUAL_O_NUMERO } from "@/constants/audios-references/qual-o-numero.const
 import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 import { answersService } from "@/service/answers.service";
 import { Audio } from "expo-av";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, TouchableWithoutFeedback } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  TouchableWithoutFeedback,
+} from "react-native";
 import {
   GestureHandlerRootView,
   PanGestureHandler,
 } from "react-native-gesture-handler";
 
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  gridContainer: { flexDirection: "column" },
+  row: { flex: 1, flexDirection: "row" },
+  rowDivider: { borderTopWidth: 2, borderTopColor: "rgba(255,255,255,0.2)" },
+  slot: { flex: 1, alignItems: "center", justifyContent: "center", padding: 8 },
+  slotDivider: { borderLeftWidth: 2, borderLeftColor: "rgba(255,255,255,0.2)" },
+  letter: { fontSize: 200, fontWeight: "bold", textAlign: "center" },
+});
+
 export default function ComparisonScreen() {
-  // Get settings from context
   const { settings, updateSetting } = useSettings();
 
-  const allLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const allNumbers = "0123456789".split("");
-  const allShapes = ["square", "circle", "triangle", "rectangle", "star"];
+  const allLetters = useMemo(() => "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""), []);
+  const allNumbers = useMemo(() => "0123456789".split(""), []);
+  const allShapes = useMemo(
+    () => ["square", "circle", "triangle", "rectangle", "star"],
+    []
+  );
 
-  // Get current color scheme based on settings
-  const currentColorScheme = useMemo(() => {
-    return COLOR_SCHEMES[settings.colorScheme] || COLOR_SCHEMES[0];
-  }, [settings.colorScheme]);
+  const items = useMemo(() => {
+    switch (settings.type) {
+      case "letter":
+        return allLetters;
+      case "number":
+        return allNumbers;
+      case "shape":
+      default:
+        return allShapes;
+    }
+  }, [settings.type, allLetters, allNumbers, allShapes]);
 
-  // Get font size based on size setting
   const fontSize = useMemo(() => {
     switch (settings.size) {
-      case 0: // Easy
+      case 0:
         return 320;
-      case 1: // Medium
+      case 1:
         return 280;
-      case 2: // Hard
+      case 2:
         return 240;
-      case 3: // Very Hard
+      case 3:
         return 200;
-      case 4: // Extremely Hard
-        return 160;
+      case 4:
       default:
         return 160;
     }
   }, [settings.size]);
 
-  // Create arrays based on type setting
-  const items = useMemo(() => {
-    let allItems: string[] = [];
-
-    if (settings.type === "number") {
-      // Array of numbers 0-9 as strings for display
-      allItems = allNumbers;
-    } else if (settings.type === "letter") {
-      // Array of letters A-Z
-      allItems = allLetters;
-    } else if (settings.type === "shape") {
-      allItems = allShapes;
-    } else {
-      // Default to letters if type is 'shape' or anything else
-      allItems = allLetters;
-    }
-
-    // If onlySelected is true and there are items to practice, filter the array
-    if (settings.onlySelected && settings.toPractice.length > 0) {
-      return allItems.filter((item) => settings.toPractice.includes(item));
-    }
-
-    return allItems;
-  }, [settings.type, settings.onlySelected, settings.toPractice]);
-
-  // State to keep track of item indices for each slot (supports 2/3/4 items)
-  const [itemsIndices, setItemsIndices] = useState<number[]>(
-    Array.from({ length: (settings as any).numberOfItems || 2 }, (_, i) => i)
+  const currentColorScheme = useMemo(
+    () => COLOR_SCHEMES[settings.colorScheme] || COLOR_SCHEMES[0],
+    [settings.colorScheme]
   );
 
-  // Game state: which slot index (0..n-1) is the correct answer
+  const [itemsIndices, setItemsIndices] = useState<number[]>([]);
   const [targetIndex, setTargetIndex] = useState<number>(0);
+  const [touchCount, setTouchCount] = useState<number>(0);
+  const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
+  const [isSwiping, setIsSwiping] = useState<boolean>(false);
+  const [swipeProcessed, setSwipeProcessed] = useState<boolean>(false);
 
-  // Track if swipe has been processed to prevent multiple triggers
-  const [swipeProcessed, setSwipeProcessed] = useState(false);
+  // Animated refs per slot
+  const scalesRef = useRef<Animated.Value[]>([]);
+  const animRefs = useRef<(Animated.CompositeAnimation | null)[]>([]);
 
-  // Track if user is currently swiping to prevent touch events
-  const [isSwiping, setIsSwiping] = useState(false);
+  // ensure scales length matches numberOfItems
+  useEffect(() => {
+    const count = settings.numberOfItems;
+    if (scalesRef.current.length !== count) {
+      scalesRef.current = Array.from(
+        { length: count },
+        () => new Animated.Value(1)
+      );
+      animRefs.current = Array.from({ length: count }, () => null);
+    }
+  }, [settings.numberOfItems]);
 
-  // Track if audio is currently playing
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  // Count touches to control when to advance rounds
-  const [touchCount, setTouchCount] = useState(0);
-
-  // Function to generate new round with random items and target side
-  const generateNewRound = useCallback(() => {
-    const count = (settings as any).numberOfItems || 2;
-    const newIndices: number[] = new Array(count).fill(-1);
-    let newTargetIdx = 0;
-    let audioSource: any = null;
-
-    const pickRandomIndexNotIn = (exclude: Set<number>) => {
-      if (exclude.size >= items.length) return 0;
+  const pickRandomIndexNotIn = useCallback(
+    (used: Set<number>) => {
       let idx = Math.floor(Math.random() * items.length);
-      while (exclude.has(idx)) {
+      while (used.has(idx) && used.size < items.length) {
         idx = Math.floor(Math.random() * items.length);
       }
       return idx;
-    };
+    },
+    [items.length]
+  );
 
-    // Check if toPractice array has elements
-    if (settings.toPractice.length > 0) {
-      // pick a practice item from toPractice
-      const randomPracticeItem =
+  const generateNewRound = useCallback(() => {
+    const count = settings.numberOfItems;
+    const newIndices = Array.from({ length: count }, () => -1);
+    let newTargetIdx = 0;
+
+    // If there are practice items configured, try to place one of them as the target
+    if (settings.toPractice && settings.toPractice.length > 0) {
+      const randomPractice =
         settings.toPractice[
           Math.floor(Math.random() * settings.toPractice.length)
         ];
-      const practiceItemIndex = items.findIndex(
-        (it) => it === randomPracticeItem
+      const practiceIndex = items.findIndex(
+        (it) =>
+          String(it).toLowerCase() === String(randomPractice).toLowerCase()
       );
-
-      // choose a random slot to put the practice item
       const practiceSlot = Math.floor(Math.random() * count);
-
       const used = new Set<number>();
-      if (practiceItemIndex !== -1) {
-        newIndices[practiceSlot] = practiceItemIndex;
-        used.add(practiceItemIndex);
+      if (practiceIndex !== -1) {
+        newIndices[practiceSlot] = practiceIndex;
+        used.add(practiceIndex);
       } else {
-        // fallback: pick a random index for practice slot
         const idx = pickRandomIndexNotIn(used);
         newIndices[practiceSlot] = idx;
         used.add(idx);
       }
-
-      // fill other slots with unique random indices
       for (let i = 0; i < count; i++) {
         if (newIndices[i] === -1) {
           const idx = pickRandomIndexNotIn(used);
@@ -142,23 +148,8 @@ export default function ComparisonScreen() {
           used.add(idx);
         }
       }
-
-      newTargetIdx = practiceSlot;
-
-      const audioIndex = newIndices[newTargetIdx];
-      audioSource =
-        settings.type === "shape"
-          ? QUAL_A_FORMA.find((audio) => audio.reference === items[audioIndex])
-              ?.path || null
-          : settings.type === "letter"
-          ? QUAL_A_LETRA.find(
-              (audio) => audio.reference.toUpperCase() === items[audioIndex]
-            )?.path || ""
-          : QUAL_O_NUMERO.find(
-              (audio) => audio.reference.toUpperCase() === items[audioIndex]
-            )?.path || "";
+      newTargetIdx = Math.floor(Math.random() * count);
     } else {
-      // No toPractice: pick unique random indices for all slots
       const used = new Set<number>();
       for (let i = 0; i < count; i++) {
         const idx = pickRandomIndexNotIn(used);
@@ -166,26 +157,29 @@ export default function ComparisonScreen() {
         used.add(idx);
       }
       newTargetIdx = Math.floor(Math.random() * count);
-      const audioIndex = newIndices[newTargetIdx];
-      audioSource =
-        settings.type === "shape"
-          ? QUAL_A_FORMA.find((audio) => audio.reference === items[audioIndex])
-              ?.path || null
-          : settings.type === "letter"
-          ? QUAL_A_LETRA[audioIndex].path || ""
-          : QUAL_O_NUMERO[audioIndex].path || "";
     }
 
     setItemsIndices(newIndices);
     setTargetIndex(newTargetIdx);
 
-    // Play audio using audioSource only if audio setting enabled
+    // play prompt audio for the target if audio enabled
+    const audioIndex = newIndices[newTargetIdx];
+    let audioSource: any = null;
+    if (settings.type === "shape") {
+      audioSource =
+        QUAL_A_FORMA.find((a) => a.reference === items[audioIndex])?.path ||
+        null;
+    } else if (settings.type === "letter") {
+      audioSource = QUAL_A_LETRA[audioIndex]?.path || null;
+    } else if (settings.type === "number") {
+      audioSource = QUAL_O_NUMERO[audioIndex]?.path || null;
+    }
+
     if (audioSource && (settings as any).audio) {
       (async () => {
         try {
           const { sound } = await Audio.Sound.createAsync(audioSource);
           await sound.playAsync();
-          // Unload sound after playing to free up resources
           sound.setOnPlaybackStatusUpdate((status: any) => {
             if (status.isLoaded && status.didJustFinish) {
               sound.unloadAsync();
@@ -196,32 +190,78 @@ export default function ComparisonScreen() {
         }
       })();
     }
-  }, [items.length, items, settings.toPractice]);
+  }, [
+    items,
+    pickRandomIndexNotIn,
+    settings.numberOfItems,
+    settings.toPractice,
+    settings.type,
+    (settings as any).audio,
+  ]);
 
-  // Initialize first round when component mounts only
   useEffect(() => {
     generateNewRound();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Game functions - check if user touched a slot (index)
-  const handleSideTouch = async (index: number) => {
-    // Ignore touch if user is swiping or audio is playing
-    if (isSwiping || isAudioPlaying) {
-      return;
+  const startPulse = (index: number) => {
+    const scale = scalesRef.current[index];
+    if (!scale) return;
+    if (animRefs.current[index]) {
+      try {
+        animRefs.current[index]?.stop();
+      } catch (e) {}
     }
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.12,
+          duration: 300,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 0.96,
+          duration: 300,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animRefs.current[index] = animation;
+    animation.start();
+  };
 
-    // increment touch count on every touch (first touch registers, second advances)
+  const stopPulse = (index: number) => {
+    const scale = scalesRef.current[index];
+    if (!scale) return;
+    const animation = animRefs.current[index];
+    if (animation) {
+      try {
+        animation.stop();
+      } catch (e) {}
+      animRefs.current[index] = null;
+    }
+    Animated.timing(scale, {
+      toValue: 1,
+      duration: 120,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleSideTouch = async (index: number) => {
+    if (isSwiping || isAudioPlaying) return;
+
     if (touchCount === 0) {
       setTouchCount(1);
-    } else {
-      setTouchCount(0);
-      generateNewRound();
       return;
     }
 
+    // second touch: register answer and advance
+    setTouchCount(0);
     try {
-      const resp = await answersService.createAnswer({
+      await answersService.createAnswer({
         numberOfItems: settings.numberOfItems,
         type: settings.type,
         item: items[itemsIndices[targetIndex]],
@@ -229,130 +269,142 @@ export default function ComparisonScreen() {
         size: settings.size,
         colors: [currentColorScheme.background, currentColorScheme.letters],
       });
-      console.log("Answer recorded:", resp);
     } catch (error) {
-      console.error("Error in handleSideTouch:", error);
+      console.error("Error saving answer:", error);
     }
 
-    let audioSource;
+    // play feedback audio if enabled
+    let audioSource: any = null;
     if (index === targetIndex) {
-      const randomIndex = Math.floor(
+      const r = Math.floor(
         Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length
       );
-
-      audioSource =
-        settings.type === "shape"
-          ? CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || ""
-          : CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || "";
+      audioSource = CORRECT_ANSWERS_PHRASES_AUDIO[r]?.path || null;
     } else {
       const audioIndex = itemsIndices[index];
-      audioSource =
-        settings.type === "shape"
-          ? ESTE_E_A_FORMA.find(
-              (audio) => audio.reference === items[audioIndex]
-            )?.path || null
-          : settings.type === "letter"
-          ? ESTA_E_A_LETRA.find(
-              (audio) => audio.reference.toUpperCase() === items[audioIndex]
-            )?.path || ""
-          : ESTE_E_O_NUMERO.find(
-              (audio) => audio.reference.toUpperCase() === items[audioIndex]
-            )?.path || "";
+      if (settings.type === "shape")
+        audioSource =
+          ESTE_E_A_FORMA.find((a) => a.reference === items[audioIndex])?.path ||
+          null;
+      else if (settings.type === "letter")
+        audioSource =
+          ESTA_E_A_LETRA.find(
+            (a) =>
+              a.reference.toUpperCase() ===
+              String(items[audioIndex]).toUpperCase()
+          )?.path || null;
+      else
+        audioSource =
+          ESTE_E_O_NUMERO.find(
+            (a) =>
+              a.reference.toUpperCase() ===
+              String(items[audioIndex]).toUpperCase()
+          )?.path || null;
     }
 
     if (audioSource && (settings as any).audio) {
-      (async () => {
-        try {
-          setIsAudioPlaying(true);
-          const { sound } = await Audio.Sound.createAsync(audioSource);
-          await sound.playAsync();
-          // Single callback to handle both unload and next round (advance only when touched)
-          sound.setOnPlaybackStatusUpdate((status: any) => {
-            if (status.isLoaded && status.didJustFinish) {
-              sound.unloadAsync();
-              setIsAudioPlaying(false);
-            }
-          });
-        } catch (error) {
-          console.error("Error playing audio:", error);
-          setIsAudioPlaying(false);
-          // fallback: advance only if touched
-          setTouchCount((prev) => {
-            if (prev > 0) {
-              generateNewRound();
-              return 0;
-            }
-            return prev;
-          });
-        }
-      })();
+      try {
+        setIsAudioPlaying(true);
+        const { sound } = await Audio.Sound.createAsync(audioSource);
+        await sound.playAsync();
+        sound.setOnPlaybackStatusUpdate((status: any) => {
+          if (status.isLoaded && status.didJustFinish) {
+            sound.unloadAsync();
+            setIsAudioPlaying(false);
+            generateNewRound();
+          }
+        });
+      } catch (error) {
+        console.error("Error playing audio:", error);
+        setIsAudioPlaying(false);
+        generateNewRound();
+      }
     } else {
-      // If there's no audio or audio setting is disabled, advance only when touched
-      setTouchCount((prev) => {
-        if (prev > 0) {
-          generateNewRound();
-          return 0;
-        }
-        return prev;
-      });
+      generateNewRound();
     }
   };
 
-  // Gesture handler for swipe to navigate
   const onGestureEvent = (event: any) => {
     const { translationX, velocityX, translationY, velocityY } =
       event.nativeEvent;
-
-    // Mark as swiping if movement is detected
-    if (Math.abs(translationX) > 10 || Math.abs(translationY) > 10) {
+    if (Math.abs(translationX) > 10 || Math.abs(translationY) > 10)
       setIsSwiping(true);
-    }
 
-    // Check if it's a right swipe (positive translationX and velocity) and not processed yet
     if (translationX > 100 && velocityX > 500 && !swipeProcessed) {
       setSwipeProcessed(true);
-      // Move to previous color scheme (wrap around)
       const currentIndex = settings.colorScheme;
       const prevIndex =
         currentIndex - 1 < 0 ? COLOR_SCHEMES.length - 1 : currentIndex - 1;
       updateSetting("colorScheme", prevIndex as any);
     }
 
-    // Check if it's a left swipe (negative translationX and velocity) and not processed yet
     if (translationX < -100 && velocityX < -500 && !swipeProcessed) {
       setSwipeProcessed(true);
       const currentIndex = settings.colorScheme;
       const nextIndex =
         currentIndex + 1 >= COLOR_SCHEMES.length ? 0 : currentIndex + 1;
-      updateSetting("colorScheme", nextIndex);
+      updateSetting("colorScheme", nextIndex as any);
     }
 
-    // Check if it's an upward swipe (negative translationY and velocity) and not processed yet
     if (translationY < -100 && velocityY < -500 && !swipeProcessed) {
       setSwipeProcessed(true);
       const currentSize = settings.size;
-      if (currentSize > 0) {
-        updateSetting("size", (currentSize - 1) as any);
-      }
+      if (currentSize > 0) updateSetting("size", (currentSize - 1) as any);
     }
 
-    // Check if it's a downward swipe (positive translationY and velocity) and not processed yet
     if (translationY > 100 && velocityY > 500 && !swipeProcessed) {
       setSwipeProcessed(true);
       const currentSize = settings.size;
-      if (currentSize < 4) {
-        updateSetting("size", (currentSize + 1) as any);
-      }
+      if (currentSize < 4) updateSetting("size", (currentSize + 1) as any);
     }
   };
 
-  // Reset swipe processed flag when gesture ends
   const onGestureEnd = () => {
     setSwipeProcessed(false);
-    // Reset swiping state after a small delay to allow touch to be properly ignored
-    setTimeout(() => {
-      setIsSwiping(false);
-    }, 100);
+    setTimeout(() => setIsSwiping(false), 100);
+  };
+
+  // Render helpers
+  const renderSlot = (itemIdx: number, slotIdx: number) => {
+    const content =
+      settings.type === "shape" ? (
+        <Shape
+          shape={items[itemIdx] as any}
+          color={currentColorScheme.letters}
+          size={settings.size}
+        />
+      ) : (
+        <Text
+          style={[
+            styles.letter,
+            { color: currentColorScheme.letters, fontSize },
+          ]}
+        >
+          {items[itemIdx]}
+        </Text>
+      );
+
+    return (
+      <TouchableWithoutFeedback
+        key={slotIdx}
+        onPress={() => handleSideTouch(slotIdx)}
+        onPressIn={() => startPulse(slotIdx)}
+        onPressOut={() => stopPulse(slotIdx)}
+      >
+        <Animated.View
+          style={[
+            styles.slot,
+            slotIdx > 0 ? styles.slotDivider : null,
+            {
+              backgroundColor: currentColorScheme.background,
+              transform: [{ scale: scalesRef.current[slotIdx] ?? 1 }],
+            },
+          ]}
+        >
+          {content}
+        </Animated.View>
+      </TouchableWithoutFeedback>
+    );
   };
 
   return (
@@ -363,158 +415,30 @@ export default function ComparisonScreen() {
       >
         <View
           style={
-            (settings as any).numberOfItems === 4
+            settings.numberOfItems === 4
               ? [styles.container, styles.gridContainer]
               : styles.container
           }
         >
-          {(settings as any).numberOfItems === 4
-            ? // Render a 2x2 grid: two rows with two slots each
-              (() => {
-                const rows: number[][] = [
-                  itemsIndices.slice(0, 2),
-                  itemsIndices.slice(2, 4),
-                ];
-                return rows.map((rowItems, rowIdx) => (
-                  <View
-                    key={rowIdx}
-                    style={[styles.row, rowIdx > 0 ? styles.rowDivider : null]}
-                  >
-                    {rowItems.map((itemIdx, colIdx) => {
-                      const globalIndex = rowIdx * 2 + colIdx;
-                      return (
-                        <TouchableWithoutFeedback
-                          key={globalIndex}
-                          onPress={() => handleSideTouch(globalIndex)}
-                        >
-                          <View
-                            style={[
-                              styles.slot,
-                              colIdx > 0 ? styles.slotDivider : null,
-                              {
-                                backgroundColor: currentColorScheme.background,
-                              },
-                            ]}
-                          >
-                            {settings.type === "shape" ? (
-                              <Shape
-                                shape={
-                                  items[itemIdx] as
-                                    | "square"
-                                    | "circle"
-                                    | "triangle"
-                                    | "rectangle"
-                                    | "star"
-                                }
-                                color={currentColorScheme.letters}
-                                size={settings.size}
-                              />
-                            ) : (
-                              <Text
-                                style={[
-                                  styles.letter,
-                                  {
-                                    color: currentColorScheme.letters,
-                                    fontSize,
-                                  },
-                                ]}
-                              >
-                                {items[itemIdx]}
-                              </Text>
-                            )}
-                          </View>
-                        </TouchableWithoutFeedback>
-                      );
-                    })}
-                  </View>
-                ));
-              })()
-            : // Fallback: single row layout for 1/2/3 items
-              itemsIndices.map((itemIdx, i) => (
-                <TouchableWithoutFeedback
-                  key={i}
-                  onPress={() => handleSideTouch(i)}
+          {settings.numberOfItems === 4 ? (
+            (() => {
+              const rows = [itemsIndices.slice(0, 2), itemsIndices.slice(2, 4)];
+              return rows.map((rowItems, rIdx) => (
+                <View
+                  key={rIdx}
+                  style={[styles.row, rIdx > 0 ? styles.rowDivider : null]}
                 >
-                  <View
-                    style={[
-                      styles.slot,
-                      i > 0 ? styles.slotDivider : null,
-                      { backgroundColor: currentColorScheme.background },
-                    ]}
-                  >
-                    {settings.type === "shape" ? (
-                      <Shape
-                        shape={
-                          items[itemIdx] as
-                            | "square"
-                            | "circle"
-                            | "triangle"
-                            | "rectangle"
-                            | "star"
-                        }
-                        color={currentColorScheme.letters}
-                        size={settings.size}
-                      />
-                    ) : (
-                      <Text
-                        style={[
-                          styles.letter,
-                          { color: currentColorScheme.letters, fontSize },
-                        ]}
-                      >
-                        {items[itemIdx]}
-                      </Text>
-                    )}
-                  </View>
-                </TouchableWithoutFeedback>
-              ))}
+                  {rowItems.map((it, cIdx) => renderSlot(it, rIdx * 2 + cIdx))}
+                </View>
+              ));
+            })()
+          ) : (
+            <View style={{ flex: 1, flexDirection: "row" }}>
+              {itemsIndices.map((it, idx) => renderSlot(it, idx))}
+            </View>
+          )}
         </View>
       </PanGestureHandler>
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: "row",
-  },
-  leftSide: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRightWidth: 2,
-    borderRightColor: "rgba(255, 255, 255, 0.3)",
-  },
-  rightSide: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  letter: {
-    fontSize: 200,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  slot: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 8,
-  },
-  slotDivider: {
-    borderLeftWidth: 2,
-    borderLeftColor: "rgba(255, 255, 255, 0.2)",
-  },
-  gridContainer: {
-    flexDirection: "column",
-  },
-  row: {
-    flex: 1,
-    flexDirection: "row",
-  },
-  rowDivider: {
-    borderTopWidth: 2,
-    borderTopColor: "rgba(255, 255, 255, 0.2)",
-  },
-});
