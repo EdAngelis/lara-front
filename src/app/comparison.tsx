@@ -120,9 +120,48 @@ export default function ComparisonScreen() {
     const count = settings.numberOfItems;
     const newIndices = Array.from({ length: count }, () => -1);
     let newTargetIdx = 0;
+    // If `onlySelected` is true and we have practice items, prefer them
+    const practiceIndexes = (settings.toPractice || [])
+      .map((p) =>
+        items.findIndex(
+          (it) => String(it).toLowerCase() === String(p).toLowerCase()
+        )
+      )
+      .filter((idx) => idx !== -1);
+    const uniquePractice = Array.from(new Set(practiceIndexes));
 
-    // If there are practice items configured, try to place one of them as the target
-    if (settings.toPractice && settings.toPractice.length > 0) {
+    if (settings.onlySelected && uniquePractice.length > 0) {
+      // If we have enough practice items, pick from them only
+      const used = new Set<number>();
+      if (uniquePractice.length >= count) {
+        // shuffle and take `count` items
+        const shuffled = uniquePractice.sort(() => Math.random() - 0.5);
+        for (let i = 0; i < count; i++) {
+          newIndices[i] = shuffled[i];
+          used.add(shuffled[i]);
+        }
+      } else {
+        // place all practice items first at random slots, then fill remaining
+        const slots = Array.from({ length: count }, (_, i) => i).sort(
+          () => Math.random() - 0.5
+        );
+        let si = 0;
+        for (const pi of uniquePractice) {
+          const slot = slots[si++];
+          newIndices[slot] = pi;
+          used.add(pi);
+        }
+        for (let i = 0; i < count; i++) {
+          if (newIndices[i] === -1) {
+            const idx = pickRandomIndexNotIn(used);
+            newIndices[i] = idx;
+            used.add(idx);
+          }
+        }
+      }
+      newTargetIdx = Math.floor(Math.random() * count);
+    } else if (settings.toPractice && settings.toPractice.length > 0) {
+      // legacy behavior: try to place one practice item as the target
       const randomPractice =
         settings.toPractice[
           Math.floor(Math.random() * settings.toPractice.length)
