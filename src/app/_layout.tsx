@@ -63,6 +63,14 @@ function RootLayoutNav() {
               animation: "slide_from_right",
             }}
           />
+          <Stack.Screen
+            name="assertive"
+            options={{
+              headerShown: false,
+              orientation: "landscape",
+              animation: "slide_from_right",
+            }}
+          />
         </Stack>
       </ThemeProvider>
     </SettingsProvider>

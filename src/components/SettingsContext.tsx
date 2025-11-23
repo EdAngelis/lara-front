@@ -11,6 +11,7 @@ export interface GameSettings {
   colorScheme: number;
   toPractice: string[];
   onlySelected: boolean;
+  audio: boolean;
 }
 
 interface SettingsContextType {
@@ -29,6 +30,7 @@ const defaultSettings: GameSettings = {
   colorScheme: 0,
   toPractice: [],
   onlySelected: false,
+  audio: true,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(

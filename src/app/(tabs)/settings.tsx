@@ -209,6 +209,22 @@ export default function SettingsScreen() {
             thumbColor={settings.onlySelected ? "#007AFF" : "#f4f3f4"}
           />
         </View>
+        <View style={[styles.separator, { backgroundColor: borderColor }]} />
+
+        <View style={styles.toggleSection}>
+          <View style={styles.toggleContent}>
+            <Text style={styles.sectionTitle}>Áudio</Text>
+            <Text style={styles.sectionDescription}>
+              Ativa ou desativa a reprodução de áudio durante o jogo
+            </Text>
+          </View>
+          <Switch
+            value={(settings as any).audio}
+            onValueChange={(value) => updateSetting("audio", value as any)}
+            trackColor={{ false: "#767577", true: "#81b0ff" }}
+            thumbColor={(settings as any).audio ? "#007AFF" : "#f4f3f4"}
+          />
+        </View>
         {settings.type === "letter" && (
           <>
             <View
@@ -268,6 +284,9 @@ export default function SettingsScreen() {
             </Text>
             <Text style={styles.previewText}>
               Apenas Selecionados: {settings.onlySelected ? "Sim" : "Não"}
+            </Text>
+            <Text style={styles.previewText}>
+              Áudio: {(settings as any).audio ? "Sim" : "Não"}
             </Text>
             <Text style={styles.previewText}>
               {settings.type === "letter"

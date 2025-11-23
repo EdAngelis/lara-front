@@ -11,7 +11,6 @@ import { QUAL_O_NUMERO } from "@/constants/audios-references/qual-o-numero.const
 import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 import { answersService } from "@/service/answers.service";
 import { Audio } from "expo-av";
-import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, TouchableWithoutFeedback } from "react-native";
 import {
@@ -90,6 +89,8 @@ export default function ComparisonScreen() {
 
   // Track if audio is currently playing
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  // Count touches to control when to advance rounds
+  const [touchCount, setTouchCount] = useState(0);
 
   // Function to generate new round with random items and target side
   const generateNewRound = useCallback(() => {
@@ -200,8 +201,8 @@ export default function ComparisonScreen() {
     setRightItemIndex(newRightIndex);
     setTargetSide(newTargetSide);
 
-    // Play audio using audioSource
-    if (audioSource) {
+    // Play audio using audioSource only if audio setting enabled
+    if (audioSource && (settings as any).audio) {
       (async () => {
         try {
           const { sound } = await Audio.Sound.createAsync(audioSource);
@@ -229,6 +230,15 @@ export default function ComparisonScreen() {
   const handleSideTouch = async (side: "left" | "right") => {
     // Ignore touch if user is swiping or audio is playing
     if (isSwiping || isAudioPlaying) {
+      return;
+    }
+
+    // increment touch count on every touch
+    if (touchCount === 0) {
+      setTouchCount(1);
+    } else {
+      setTouchCount(0);
+      generateNewRound();
       return;
     }
 
@@ -272,7 +282,7 @@ export default function ComparisonScreen() {
             )?.path || "";
     }
 
-    if (audioSource) {
+    if (audioSource && (settings as any).audio) {
       (async () => {
         try {
           setIsAudioPlaying(true);
@@ -283,16 +293,30 @@ export default function ComparisonScreen() {
             if (status.isLoaded && status.didJustFinish) {
               sound.unloadAsync();
               setIsAudioPlaying(false);
-              generateNewRound();
             }
           });
         } catch (error) {
           console.error("Error playing audio:", error);
           setIsAudioPlaying(false);
+          // fallback: advance only if touched
+          setTouchCount((prev) => {
+            if (prev > 0) {
+              generateNewRound();
+              return 0;
+            }
+            return prev;
+          });
         }
       })();
     } else {
-      generateNewRound();
+      // If there's no audio or audio setting is disabled, advance only when touched
+      setTouchCount((prev) => {
+        if (prev > 0) {
+          generateNewRound();
+          return 0;
+        }
+        return prev;
+      });
     }
   };
 
@@ -309,7 +333,11 @@ export default function ComparisonScreen() {
     // Check if it's a right swipe (positive translationX and velocity) and not processed yet
     if (translationX > 100 && velocityX > 500 && !swipeProcessed) {
       setSwipeProcessed(true);
-      router.push("/");
+      // Move to previous color scheme (wrap around)
+      const currentIndex = settings.colorScheme;
+      const prevIndex =
+        currentIndex - 1 < 0 ? COLOR_SCHEMES.length - 1 : currentIndex - 1;
+      updateSetting("colorScheme", prevIndex as any);
     }
 
     // Check if it's a left swipe (negative translationX and velocity) and not processed yet

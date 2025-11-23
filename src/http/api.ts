@@ -1,8 +1,13 @@
-import Config from "react-native-config";
+import Constants from "expo-constants";
 
-const base_url =
-  Config.BASE_URL || "https://fcfqqtkmw9.execute-api.us-east-1.amazonaws.com";
-const api_key = Config.API_KEY || "f00f3020932fddf";
+const extra =
+  (Constants as any).expoConfig?.extra ??
+  (Constants as any).manifest?.extra ??
+  {};
+
+const base_url = extra.BASE_URL;
+const api_key = extra.API_KEY;
+const env = extra.ENV;
 
 const defaultHeaders = {
   "x-api-key": api_key,
@@ -18,6 +23,7 @@ export const api = {
     data?: any,
     customHeaders?: any
   ) {
+    if (env === "development") return;
     try {
       let headers = { ...defaultHeaders, ...customHeaders };
       let body;

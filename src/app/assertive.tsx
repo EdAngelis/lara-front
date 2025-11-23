@@ -4,7 +4,6 @@ import { Text, View } from "@/components/Themed";
 import { COLOR_SCHEMES } from "@/constants/ColorSchemes";
 import { answersService } from "@/service/answers.service";
 import { Audio } from "expo-av";
-import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, TouchableWithoutFeedback } from "react-native";
 import {
@@ -76,6 +75,8 @@ export default function AssertiveScreen() {
 
   // Track if audio is currently playing
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  // Count touches to control when to advance items
+  const [touchCount, setTouchCount] = useState(0);
 
   // Function to generate new item
   const generateNewItem = useCallback(() => {
@@ -116,9 +117,8 @@ export default function AssertiveScreen() {
     }
 
     setCurrentItemIndex(newItemIndex);
-
-    // Play audio using audioSource
-    if (audioSource) {
+    // Play audio using audioSource only if audio setting enabled
+    if (audioSource && (settings as any).audio) {
       (async () => {
         try {
           const { sound } = await Audio.Sound.createAsync(audioSource);
@@ -149,6 +149,9 @@ export default function AssertiveScreen() {
       return;
     }
 
+    // increment touch count on every touch
+    setTouchCount((c) => c + 1);
+
     try {
       await answersService.createAnswer({
         mode: settings.mode,
@@ -162,10 +165,29 @@ export default function AssertiveScreen() {
       console.error("Error in handleScreenTouch:", error);
     }
 
+    // If audio is disabled, advance only when touched
+    if (!(settings as any).audio) {
+      setTouchCount((prev) => {
+        if (prev > 0) {
+          generateNewItem();
+          return 0;
+        }
+        return prev;
+      });
+      return;
+    }
+
     setIsAudioPlaying(true);
     // Small delay before generating new item to prevent rapid tapping
     setTimeout(() => {
-      generateNewItem();
+      // only advance if there was at least one touch
+      setTouchCount((prev) => {
+        if (prev > 0) {
+          generateNewItem();
+          return 0;
+        }
+        return prev;
+      });
       setIsAudioPlaying(false);
     }, 300);
   };
@@ -183,7 +205,11 @@ export default function AssertiveScreen() {
     // Check if it's a right swipe (positive translationX and velocity) and not processed yet
     if (translationX > 100 && velocityX > 500 && !swipeProcessed) {
       setSwipeProcessed(true);
-      router.push("/");
+      // Move to previous color scheme (wrap around)
+      const currentIndex = settings.colorScheme;
+      const prevIndex =
+        currentIndex - 1 < 0 ? COLOR_SCHEMES.length - 1 : currentIndex - 1;
+      updateSetting("colorScheme", prevIndex as any);
     }
 
     // Check if it's a left swipe (negative translationX and velocity) and not processed yet
