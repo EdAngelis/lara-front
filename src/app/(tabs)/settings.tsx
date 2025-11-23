@@ -142,6 +142,12 @@ export default function SettingsScreen() {
     },
   ];
 
+  const numberOfItemsOptions = [
+    { label: "2 Itens", value: 2 as 2 },
+    { label: "3 Itens", value: 3 as 3 },
+    { label: "4 Itens", value: 4 as 4 },
+  ];
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
@@ -181,6 +187,18 @@ export default function SettingsScreen() {
           options={sizeOptions}
           selectedValue={settings.size}
           onValueChange={(value) => updateSetting("size", value)}
+          row
+        />
+
+        <View style={[styles.separator, { backgroundColor: borderColor }]} />
+
+        <RadioGroup
+          title="Número de Itens"
+          options={numberOfItemsOptions}
+          selectedValue={(settings as any).numberOfItems}
+          onValueChange={(value) =>
+            updateSetting("numberOfItems", value as any)
+          }
           row
         />
 

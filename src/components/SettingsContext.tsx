@@ -12,6 +12,7 @@ export interface GameSettings {
   toPractice: string[];
   onlySelected: boolean;
   audio: boolean;
+  numberOfItems: 2 | 3 | 4;
 }
 
 interface SettingsContextType {
@@ -31,6 +32,7 @@ const defaultSettings: GameSettings = {
   toPractice: [],
   onlySelected: false,
   audio: true,
+  numberOfItems: 2,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(

@@ -74,12 +74,13 @@ export default function ComparisonScreen() {
     return allItems;
   }, [settings.type, settings.onlySelected, settings.toPractice]);
 
-  // State to keep track of left and right item indices
-  const [leftItemIndex, setLeftItemIndex] = useState(0);
-  const [rightItemIndex, setRightItemIndex] = useState(1);
+  // State to keep track of item indices for each slot (supports 2/3/4 items)
+  const [itemsIndices, setItemsIndices] = useState<number[]>(
+    Array.from({ length: (settings as any).numberOfItems || 2 }, (_, i) => i)
+  );
 
-  // Game state: which side is the correct answer ('left' or 'right')
-  const [targetSide, setTargetSide] = useState<"left" | "right">("left");
+  // Game state: which slot index (0..n-1) is the correct answer
+  const [targetIndex, setTargetIndex] = useState<number>(0);
 
   // Track if swipe has been processed to prevent multiple triggers
   const [swipeProcessed, setSwipeProcessed] = useState(false);
@@ -94,100 +95,78 @@ export default function ComparisonScreen() {
 
   // Function to generate new round with random items and target side
   const generateNewRound = useCallback(() => {
-    let newLeftIndex: number;
-    let newRightIndex: number;
-    let newTargetSide: "left" | "right";
-    let audioSource;
+    const count = (settings as any).numberOfItems || 2;
+    const newIndices: number[] = new Array(count).fill(-1);
+    let newTargetIdx = 0;
+    let audioSource: any = null;
+
+    const pickRandomIndexNotIn = (exclude: Set<number>) => {
+      if (exclude.size >= items.length) return 0;
+      let idx = Math.floor(Math.random() * items.length);
+      while (exclude.has(idx)) {
+        idx = Math.floor(Math.random() * items.length);
+      }
+      return idx;
+    };
 
     // Check if toPractice array has elements
     if (settings.toPractice.length > 0) {
-      // Randomly choose one side to place the practice item
-      const practiceOnLeft = Math.random() < 0.5;
-
-      // Get a random item from toPractice array
+      // pick a practice item from toPractice
       const randomPracticeItem =
         settings.toPractice[
           Math.floor(Math.random() * settings.toPractice.length)
         ];
-
-      // Find the index of this practice item in the items array
       const practiceItemIndex = items.findIndex(
-        (item) => item === randomPracticeItem
+        (it) => it === randomPracticeItem
       );
 
+      // choose a random slot to put the practice item
+      const practiceSlot = Math.floor(Math.random() * count);
+
+      const used = new Set<number>();
       if (practiceItemIndex !== -1) {
-        audioSource =
-          settings.type === "shape"
-            ? QUAL_A_FORMA.find(
-                (audio) => audio.reference === randomPracticeItem
-              )?.path || null
-            : settings.type === "letter"
-            ? QUAL_A_LETRA.find(
-                (audio) => audio.reference.toUpperCase() === randomPracticeItem
-              )!.path || ""
-            : QUAL_O_NUMERO.find(
-                (audio) => audio.reference.toUpperCase() === randomPracticeItem
-              )?.path || "";
-        // Place practice item on chosen side
-        if (practiceOnLeft) {
-          newLeftIndex = practiceItemIndex;
-          // Generate random index for right side, ensuring it's different
-          newRightIndex = Math.floor(Math.random() * items.length);
-          while (newRightIndex === newLeftIndex) {
-            newRightIndex = Math.floor(Math.random() * items.length);
-          }
-          // Set target side to left since that's where the practice item is
-          newTargetSide = "left";
-        } else {
-          newRightIndex = practiceItemIndex;
-          // Generate random index for left side, ensuring it's different
-          newLeftIndex = Math.floor(Math.random() * items.length);
-          while (newLeftIndex === newRightIndex) {
-            newLeftIndex = Math.floor(Math.random() * items.length);
-          }
-          // Set target side to right since that's where the practice item is
-          newTargetSide = "right";
-        }
+        newIndices[practiceSlot] = practiceItemIndex;
+        used.add(practiceItemIndex);
       } else {
-        // Fallback: if practice item not found in items array, use random generation
-        newLeftIndex = Math.floor(Math.random() * items.length);
-        newRightIndex = Math.floor(Math.random() * items.length);
-        while (newRightIndex === newLeftIndex) {
-          newRightIndex = Math.floor(Math.random() * items.length);
+        // fallback: pick a random index for practice slot
+        const idx = pickRandomIndexNotIn(used);
+        newIndices[practiceSlot] = idx;
+        used.add(idx);
+      }
+
+      // fill other slots with unique random indices
+      for (let i = 0; i < count; i++) {
+        if (newIndices[i] === -1) {
+          const idx = pickRandomIndexNotIn(used);
+          newIndices[i] = idx;
+          used.add(idx);
         }
-        // Use random target side for fallback
-        newTargetSide = Math.random() < 0.5 ? "left" : "right";
-        const audioIndex =
-          newTargetSide === "left" ? newLeftIndex : newRightIndex;
-        audioSource =
-          settings.type === "shape"
-            ? QUAL_A_FORMA.find(
-                (audio) => audio.reference === items[audioIndex]
-              )?.path || null
-            : settings.type === "letter"
-            ? QUAL_A_LETRA.find(
-                (audio) => audio.reference.toUpperCase() === items[audioIndex]
-              )?.path || ""
-            : QUAL_O_NUMERO.find(
-                (audio) => audio.reference.toUpperCase() === items[audioIndex]
-              )?.path || "";
       }
+
+      newTargetIdx = practiceSlot;
+
+      const audioIndex = newIndices[newTargetIdx];
+      audioSource =
+        settings.type === "shape"
+          ? QUAL_A_FORMA.find((audio) => audio.reference === items[audioIndex])
+              ?.path || null
+          : settings.type === "letter"
+          ? QUAL_A_LETRA.find(
+              (audio) => audio.reference.toUpperCase() === items[audioIndex]
+            )?.path || ""
+          : QUAL_O_NUMERO.find(
+              (audio) => audio.reference.toUpperCase() === items[audioIndex]
+            )?.path || "";
     } else {
-      // toPractice is empty, use original random generation logic
-      newLeftIndex = Math.floor(Math.random() * items.length);
-      newRightIndex = Math.floor(Math.random() * items.length);
-
-      // Ensure left and right items are different
-      while (newRightIndex === newLeftIndex) {
-        newRightIndex = Math.floor(Math.random() * items.length);
+      // No toPractice: pick unique random indices for all slots
+      const used = new Set<number>();
+      for (let i = 0; i < count; i++) {
+        const idx = pickRandomIndexNotIn(used);
+        newIndices[i] = idx;
+        used.add(idx);
       }
-
-      // Use random target side when no practice items
-      newTargetSide = Math.random() < 0.5 ? "left" : "right";
-
-      const audioIndex =
-        newTargetSide === "left" ? newLeftIndex : newRightIndex;
-
+      newTargetIdx = Math.floor(Math.random() * count);
+      const audioIndex = newIndices[newTargetIdx];
       audioSource =
         settings.type === "shape"
           ? QUAL_A_FORMA.find((audio) => audio.reference === items[audioIndex])
@@ -197,9 +176,8 @@ export default function ComparisonScreen() {
           : QUAL_O_NUMERO[audioIndex].path || "";
     }
 
-    setLeftItemIndex(newLeftIndex);
-    setRightItemIndex(newRightIndex);
-    setTargetSide(newTargetSide);
+    setItemsIndices(newIndices);
+    setTargetIndex(newTargetIdx);
 
     // Play audio using audioSource only if audio setting enabled
     if (audioSource && (settings as any).audio) {
@@ -226,14 +204,14 @@ export default function ComparisonScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Game functions - check if user touched correct side
-  const handleSideTouch = async (side: "left" | "right") => {
+  // Game functions - check if user touched a slot (index)
+  const handleSideTouch = async (index: number) => {
     // Ignore touch if user is swiping or audio is playing
     if (isSwiping || isAudioPlaying) {
       return;
     }
 
-    // increment touch count on every touch
+    // increment touch count on every touch (first touch registers, second advances)
     if (touchCount === 0) {
       setTouchCount(1);
     } else {
@@ -246,8 +224,8 @@ export default function ComparisonScreen() {
       const resp = await answersService.createAnswer({
         mode: settings.mode,
         type: settings.type,
-        item: items[targetSide === "left" ? leftItemIndex : rightItemIndex],
-        result: side === targetSide ? 0 : 1,
+        item: items[itemsIndices[targetIndex]],
+        result: index === targetIndex ? 0 : 1,
         size: settings.size,
         colors: [currentColorScheme.background, currentColorScheme.letters],
       });
@@ -257,7 +235,7 @@ export default function ComparisonScreen() {
     }
 
     let audioSource;
-    if (targetSide === side) {
+    if (index === targetIndex) {
       const randomIndex = Math.floor(
         Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length
       );
@@ -267,7 +245,7 @@ export default function ComparisonScreen() {
           ? CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || ""
           : CORRECT_ANSWERS_PHRASES_AUDIO[randomIndex].path || "";
     } else {
-      const audioIndex = targetSide === "left" ? rightItemIndex : leftItemIndex;
+      const audioIndex = itemsIndices[index];
       audioSource =
         settings.type === "shape"
           ? ESTE_E_A_FORMA.find(
@@ -288,7 +266,7 @@ export default function ComparisonScreen() {
           setIsAudioPlaying(true);
           const { sound } = await Audio.Sound.createAsync(audioSource);
           await sound.playAsync();
-          // Single callback to handle both unload and next round
+          // Single callback to handle both unload and next round (advance only when touched)
           sound.setOnPlaybackStatusUpdate((status: any) => {
             if (status.isLoaded && status.didJustFinish) {
               sound.unloadAsync();
@@ -384,19 +362,22 @@ export default function ComparisonScreen() {
         onHandlerStateChange={onGestureEnd}
       >
         <View style={styles.container}>
-          {/* Left side - touchable area for left item */}
-          <TouchableWithoutFeedback onPress={() => handleSideTouch("left")}>
-            <View
-              style={[
-                styles.leftSide,
-                { backgroundColor: currentColorScheme.background },
-              ]}
+          {itemsIndices.map((itemIdx, i) => (
+            <TouchableWithoutFeedback
+              key={i}
+              onPress={() => handleSideTouch(i)}
             >
-              {settings.type === "shape" ? (
-                <>
+              <View
+                style={[
+                  styles.slot,
+                  i > 0 ? styles.slotDivider : null,
+                  { backgroundColor: currentColorScheme.background },
+                ]}
+              >
+                {settings.type === "shape" ? (
                   <Shape
                     shape={
-                      items[leftItemIndex] as
+                      items[itemIdx] as
                         | "square"
                         | "circle"
                         | "triangle"
@@ -406,55 +387,19 @@ export default function ComparisonScreen() {
                     color={currentColorScheme.letters}
                     size={settings.size}
                   />
-                </>
-              ) : (
-                <Text
-                  style={[
-                    styles.letter,
-                    { color: currentColorScheme.letters, fontSize },
-                  ]}
-                >
-                  {items[leftItemIndex]}
-                </Text>
-              )}
-            </View>
-          </TouchableWithoutFeedback>
-
-          {/* Right side - touchable area for right item */}
-          <TouchableWithoutFeedback onPress={() => handleSideTouch("right")}>
-            <View
-              style={[
-                styles.rightSide,
-                { backgroundColor: currentColorScheme.background },
-              ]}
-            >
-              {settings.type === "shape" ? (
-                <>
-                  <Shape
-                    shape={
-                      items[rightItemIndex] as
-                        | "square"
-                        | "circle"
-                        | "triangle"
-                        | "rectangle"
-                        | "star"
-                    }
-                    color={currentColorScheme.letters}
-                    size={settings.size}
-                  />
-                </>
-              ) : (
-                <Text
-                  style={[
-                    styles.letter,
-                    { color: currentColorScheme.letters, fontSize },
-                  ]}
-                >
-                  {items[rightItemIndex]}
-                </Text>
-              )}
-            </View>
-          </TouchableWithoutFeedback>
+                ) : (
+                  <Text
+                    style={[
+                      styles.letter,
+                      { color: currentColorScheme.letters, fontSize },
+                    ]}
+                  >
+                    {items[itemIdx]}
+                  </Text>
+                )}
+              </View>
+            </TouchableWithoutFeedback>
+          ))}
         </View>
       </PanGestureHandler>
     </GestureHandlerRootView>
@@ -482,5 +427,15 @@ const styles = StyleSheet.create({
     fontSize: 200,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  slot: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8,
+  },
+  slotDivider: {
+    borderLeftWidth: 2,
+    borderLeftColor: "rgba(255, 255, 255, 0.2)",
   },
 });
