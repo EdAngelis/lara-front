@@ -1,6 +1,6 @@
 import { useSettings } from "@/components/SettingsContext";
 import Shape from "@/components/shape";
-import { Text, View } from "@/components/Themed";
+import { View } from "@/components/Themed";
 import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/constants/audios-references/correct_answers_phrases.constants";
 import { ESTA_E_A_LETRA } from "@/constants/audios-references/esta-e-a-letra.constant";
 import { ESTE_E_A_FORMA } from "@/constants/audios-references/este-e-a-forma.constant";
@@ -33,9 +33,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   gridContainer: { flexDirection: "column" },
   row: { flex: 1, flexDirection: "row" },
-  rowDivider: { borderTopWidth: 2, borderTopColor: "rgba(255,255,255,0.2)" },
+  rowDivider: {},
   slot: { flex: 1, alignItems: "center", justifyContent: "center", padding: 8 },
-  slotDivider: { borderLeftWidth: 2, borderLeftColor: "rgba(255,255,255,0.2)" },
+  slotDivider: {},
   letter: { fontSize: 200, fontWeight: "bold", textAlign: "center" },
 });
 
@@ -253,13 +253,14 @@ export default function ComparisonScreen() {
   const handleSideTouch = async (index: number) => {
     if (isSwiping || isAudioPlaying) return;
 
-    if (touchCount === 0) {
-      setTouchCount(1);
+    if (touchCount === 1) {
+      setTouchCount(0);
+      generateNewRound();
       return;
     }
 
     // second touch: register answer and advance
-    setTouchCount(0);
+    setTouchCount(1);
     try {
       await answersService.createAnswer({
         numberOfItems: settings.numberOfItems,
@@ -311,7 +312,6 @@ export default function ComparisonScreen() {
           if (status.isLoaded && status.didJustFinish) {
             sound.unloadAsync();
             setIsAudioPlaying(false);
-            generateNewRound();
           }
         });
       } catch (error) {
@@ -374,14 +374,18 @@ export default function ComparisonScreen() {
           size={settings.size}
         />
       ) : (
-        <Text
+        <Animated.Text
           style={[
             styles.letter,
-            { color: currentColorScheme.letters, fontSize },
+            {
+              color: currentColorScheme.letters,
+              fontSize,
+              transform: [{ scale: scalesRef.current[slotIdx] ?? 1 }],
+            },
           ]}
         >
           {items[itemIdx]}
-        </Text>
+        </Animated.Text>
       );
 
     return (
@@ -397,7 +401,6 @@ export default function ComparisonScreen() {
             slotIdx > 0 ? styles.slotDivider : null,
             {
               backgroundColor: currentColorScheme.background,
-              transform: [{ scale: scalesRef.current[slotIdx] ?? 1 }],
             },
           ]}
         >

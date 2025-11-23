@@ -183,7 +183,7 @@ export default function SettingsScreen() {
           <View style={styles.toggleContent}>
             <Text style={styles.sectionTitle}>Áudio</Text>
             <Text style={styles.sectionDescription}>
-              Ativa ou desativa a reprodução de áudio durante o jogo
+              Ativa ou desativa a reprodução de áudio
             </Text>
           </View>
           <Switch

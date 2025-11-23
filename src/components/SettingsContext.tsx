@@ -1,4 +1,10 @@
-import React, { createContext, ReactNode, useContext, useState } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 export type GameType = "letter" | "number" | "shape";
 export type Size = 0 | 1 | 2 | 3 | 4;
@@ -54,6 +60,15 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       [key]: value,
     }));
   };
+
+  // When the game type changes, clear the onlySelected flag
+  useEffect(() => {
+    if (settings.onlySelected) {
+      setSettings((prev) => ({ ...prev, onlySelected: false }));
+    }
+    // only run when type changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.type]);
 
   const resetSettings = () => {
     setSettings(defaultSettings);

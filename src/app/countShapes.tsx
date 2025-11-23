@@ -74,12 +74,12 @@ export default function CountShapes() {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
         const { sound } = await Audio.Sound.createAsync(
           // asset path relative to this file
-          require("../../assets/bubble-pop.mp3"),
+          require("../../assets/cartoon-jump.mp3"),
           { shouldPlay: false }
         );
         if (mounted) soundRef.current = sound;
       } catch (e) {
-        console.warn("Failed to load bubble-pop sound", e);
+        console.warn("Failed to load cartoon-jump sound", e);
       }
     };
     load();
