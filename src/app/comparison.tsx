@@ -105,6 +105,16 @@ export default function ComparisonScreen() {
     }
   }, [settings.numberOfItems]);
 
+  // Track press timestamps to detect holds
+  const HOLD_THRESHOLD_MS = 500;
+  const pressInTimeRef = useRef<number[]>([]);
+  useEffect(() => {
+    const count = settings.numberOfItems;
+    if (pressInTimeRef.current.length !== count) {
+      pressInTimeRef.current = Array.from({ length: count }, () => 0);
+    }
+  }, [settings.numberOfItems]);
+
   const pickRandomIndexNotIn = useCallback(
     (used: Set<number>) => {
       let idx = Math.floor(Math.random() * items.length);
@@ -430,9 +440,24 @@ export default function ComparisonScreen() {
     return (
       <TouchableWithoutFeedback
         key={slotIdx}
-        onPress={() => handleSideTouch(slotIdx)}
-        onPressIn={() => startPulse(slotIdx)}
-        onPressOut={() => stopPulse(slotIdx)}
+        onPress={() => {
+          const down = pressInTimeRef.current[slotIdx] || 0;
+          const held = down > 0 && Date.now() - down >= HOLD_THRESHOLD_MS;
+          if (!held) {
+            handleSideTouch(slotIdx);
+          }
+          console.log("Held:", held);
+          // clear timestamp after evaluating
+          pressInTimeRef.current[slotIdx] = 0;
+        }}
+        onPressIn={() => {
+          pressInTimeRef.current[slotIdx] = Date.now();
+          startPulse(slotIdx);
+        }}
+        onPressOut={() => {
+          // stop animation but keep timestamp for hold duration evaluation in onPress
+          stopPulse(slotIdx);
+        }}
       >
         <Animated.View
           style={[

@@ -32,16 +32,16 @@ export default function CountShapes() {
   const circleSize = useMemo(() => {
     switch (settings.size) {
       case 0:
-        return 40;
-      case 1:
-        return 50;
-      case 2:
         return 60;
+      case 1:
+        return 80;
+      case 2:
+        return 100;
       case 3:
-        return 70;
+        return 120;
       case 4:
       default:
-        return 80;
+        return 120;
     }
   }, [settings.size]);
 
@@ -74,7 +74,7 @@ export default function CountShapes() {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
         const { sound } = await Audio.Sound.createAsync(
           // asset path relative to this file
-          require("../../assets/cartoon-jump.mp3"),
+          require("@/assets/audio/effects/cartoon-jump.mp3"),
           { shouldPlay: false }
         );
         if (mounted) soundRef.current = sound;
