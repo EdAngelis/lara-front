@@ -23,7 +23,7 @@ export const api = {
     data?: any,
     customHeaders?: any
   ) {
-    if (env === "development") return;
+    //if (env === "development") return;
     try {
       let headers = { ...defaultHeaders, ...customHeaders };
       let body;
