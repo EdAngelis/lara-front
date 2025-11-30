@@ -64,16 +64,21 @@ export default function ComparisonScreen() {
   const fontSize = useMemo(() => {
     switch (settings.size) {
       case 0:
-        return 320;
+        return 440;
       case 1:
-        return 280;
+        return 400;
       case 2:
-        return 240;
+        return 360;
       case 3:
-        return 200;
+        return 320;
       case 4:
+        return 280;
+      case 5:
+        return 240;
+      case 6:
+        return 200;
       default:
-        return 160;
+        return 240;
     }
   }, [settings.size]);
 
@@ -404,7 +409,9 @@ export default function ComparisonScreen() {
     if (translationY > 100 && velocityY > 500 && !swipeProcessed) {
       setSwipeProcessed(true);
       const currentSize = settings.size;
-      if (currentSize < 4) updateSetting("size", (currentSize + 1) as any);
+      if (currentSize < 6) {
+        updateSetting("size", (currentSize + 1) as any);
+      }
     }
   };
 

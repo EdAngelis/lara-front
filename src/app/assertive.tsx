@@ -27,18 +27,22 @@ export default function AssertiveScreen() {
   // Get font size based on size setting
   const fontSize = useMemo(() => {
     switch (settings.size) {
-      case 0: // Easy
+      case 0:
+        return 440;
+      case 1:
+        return 400;
+      case 2:
+        return 360;
+      case 3:
         return 320;
-      case 1: // Medium
+      case 4:
         return 280;
-      case 2: // Hard
+      case 5:
         return 240;
-      case 3: // Very Hard
+      case 6:
         return 200;
-      case 4: // Extremely Hard
-        return 160;
       default:
-        return 160;
+        return 240;
     }
   }, [settings.size]);
 
@@ -234,7 +238,7 @@ export default function AssertiveScreen() {
     if (translationY > 100 && velocityY > 500 && !swipeProcessed) {
       setSwipeProcessed(true);
       const currentSize = settings.size;
-      if (currentSize < 4) {
+      if (currentSize < 6) {
         updateSetting("size", (currentSize + 1) as any);
       }
     }
