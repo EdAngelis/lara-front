@@ -5,23 +5,27 @@ import Svg, { Circle, Polygon, Rect, Path } from "react-native-svg";
 interface ShapeProps {
   shape: "square" | "circle" | "triangle" | "rectangle" | "star";
   color: string;
-  size: 0 | 1 | 2 | 3 | 4;
+  size: 0 | 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 export default function Shape({ shape, color, size }: ShapeProps) {
   // Map size to dimensions
   const getDimensions = () => {
     switch (size) {
-      case 0: // Easy
+      case 0:
+        return 320;
+      case 1:
+        return 280;
+      case 2:
         return 240;
-      case 1: // Medium
+      case 3:
         return 200;
-      case 2: // Hard
+      case 4:
         return 160;
-      case 3: // Very Hard
+      case 5:
         return 120;
-      case 4: // Extremely Hard
-        return 100;
+      case 6:
+        return 80;
       default:
         return 160;
     }
