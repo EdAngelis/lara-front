@@ -24,7 +24,7 @@ export function NavigationButton({
   backgroundColor: customBackgroundColor,
   iconColor,
   style,
-  iconSize = 250,
+  iconSize = 200,
   shape,
   qt,
 }: NavigationButtonProps) {
@@ -63,7 +63,7 @@ export function NavigationButton({
                 key={index}
                 shape={shape}
                 color={iconActualColor}
-                size={3}
+                size={5}
               />
             ))}
           </View>
