@@ -4,10 +4,33 @@ import { NavigationButton } from "@/components/NavigationButton";
 import { useSettings } from "@/components/SettingsContext";
 import { TabToggleButton } from "@/components/TabToggleButton";
 import { View } from "@/components/Themed";
-import { useMemo } from "react";
+import * as ScreenOrientation from "expo-screen-orientation";
+import { useEffect, useMemo } from "react";
 
 export default function TabOneScreen() {
   const { settings } = useSettings();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("Could not lock screen orientation for tab index:", e);
+      }
+    })();
+    return () => {
+      (async () => {
+        try {
+          await ScreenOrientation.unlockAsync();
+        } catch (e) {
+          // ignore
+        }
+      })();
+    };
+  }, []);
 
   const gamePath = useMemo(() => {
     return "/comparison";

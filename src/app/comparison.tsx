@@ -134,11 +134,9 @@ export default function ComparisonScreen() {
   const generateNewRound = useCallback(() => {
     const count = settings.numberOfItems;
     const newIndices = Array.from({ length: count }, () => -1);
-    console.log("newIndices initialized:", newIndices);
     let newTargetIdx = 0;
     let practiceSlot;
     // If `onlySelected` is true and we have practice items, prefer them
-    console.log("toPractice:", settings.toPractice);
     const practiceIndexes = (settings.toPractice || [])
       .map((p) =>
         items.findIndex(
@@ -184,32 +182,21 @@ export default function ComparisonScreen() {
         settings.toPractice[
           Math.floor(Math.random() * settings.toPractice.length)
         ];
-      console.log("Random practice item:", randomPractice);
       const practiceIndex = items.findIndex(
         (it) =>
           String(it).toLowerCase() === String(randomPractice).toLowerCase()
       );
-      console.log("Practice index:", practiceIndex);
       const practiceSlot = Math.floor(Math.random() * count);
-      console.log("Practice slot:", practiceSlot);
       const used = new Set<number>();
       if (practiceIndex !== -1) {
         newIndices[practiceSlot] = practiceIndex;
-        console.log("newIndices after placing practice item:", newIndices);
         used.add(practiceIndex);
-        console.log("Used set after adding practice index:", used);
       } else {
         const idx = pickRandomIndexNotIn(used);
-        console.log("Picked random index for practice slot:", idx);
         newIndices[practiceSlot] = idx;
-        console.log(
-          "newIndices after placing random index for practice slot:",
-          newIndices
-        );
+
         used.add(idx);
-        console.log("Used set after adding random index:", used);
       }
-      console.log("count", count);
       for (let i = 0; i < count; i++) {
         if (newIndices[i] === -1) {
           const idx = pickRandomIndexNotIn(used);
@@ -218,7 +205,6 @@ export default function ComparisonScreen() {
         }
       }
       newTargetIdx = practiceSlot;
-      console.log("newTargetIdx:", newTargetIdx);
     } else {
       const used = new Set<number>();
       for (let i = 0; i < count; i++) {

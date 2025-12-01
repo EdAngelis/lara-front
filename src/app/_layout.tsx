@@ -2,6 +2,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
+import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
@@ -48,6 +49,21 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    // lock the app to landscape at runtime — works in Expo Go and dev clients
+    (async () => {
+      try {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        );
+      } catch (e) {
+        // non-fatal: log it so we can diagnose on devices that reject the lock
+        // eslint-disable-next-line no-console
+        console.warn("Could not lock screen orientation:", e);
+      }
+    })();
+  }, []);
 
   return (
     <SettingsProvider>

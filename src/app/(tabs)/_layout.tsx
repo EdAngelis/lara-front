@@ -1,6 +1,7 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
-import React from "react";
+import * as ScreenOrientation from "expo-screen-orientation";
+import React, { useEffect } from "react";
 
 import {
   TabVisibilityProvider,
@@ -64,6 +65,28 @@ function TabsContent() {
 }
 
 export default function TabLayout() {
+  useEffect(() => {
+    (async () => {
+      try {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("Could not lock screen orientation for tabs:", e);
+      }
+    })();
+    return () => {
+      // Optionally unlock on unmount to restore default behavior
+      (async () => {
+        try {
+          await ScreenOrientation.unlockAsync();
+        } catch (e) {
+          // ignore
+        }
+      })();
+    };
+  }, []);
   return (
     <TabVisibilityProvider>
       <TabsContent />

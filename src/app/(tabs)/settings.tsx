@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ScreenOrientation from "expo-screen-orientation";
 import React, { useEffect } from "react";
 import {
   Alert,
@@ -55,6 +56,28 @@ export default function SettingsScreen() {
   useEffect(() => {
     updateSetting("toPractice", []);
   }, [settings.type]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.LANDSCAPE
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("Could not lock screen orientation for settings:", e);
+      }
+    })();
+    return () => {
+      (async () => {
+        try {
+          await ScreenOrientation.unlockAsync();
+        } catch (e) {
+          // ignore
+        }
+      })();
+    };
+  }, []);
 
   const handleLetterToggle = (letter: string) => {
     const currentPractice = settings.toPractice;
