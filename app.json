@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Lara",
-    "slug": "Lara",
+    "slug": "lara-front",
     "version": "1.0.0",
     "orientation": "landscape",
     "icon": "./src/assets/images/icon.png",
