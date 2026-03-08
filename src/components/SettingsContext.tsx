@@ -18,6 +18,7 @@ export interface GameSettings {
   audio: boolean;
   numberOfItems: 1 | 2 | 3 | 4;
   numberOfCircles: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  supervised: boolean;
 }
 
 interface SettingsContextType {
@@ -38,6 +39,7 @@ const defaultSettings: GameSettings = {
   audio: true,
   numberOfItems: 2,
   numberOfCircles: 3,
+  supervised: false,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(

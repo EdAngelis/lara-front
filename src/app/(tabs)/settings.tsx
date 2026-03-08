@@ -204,6 +204,20 @@ export default function SettingsScreen() {
         </View>
         <View style={styles.toggleSection}>
           <View style={styles.toggleContent}>
+            <Text style={styles.sectionTitle}>Supervisionado</Text>
+            <Text style={styles.sectionDescription}>
+              Exibe botão para gerar nova rodada manualmente
+            </Text>
+          </View>
+          <Switch
+            value={settings.supervised}
+            onValueChange={(value) => updateSetting("supervised", value)}
+            trackColor={{ false: "#767577", true: "#81b0ff" }}
+            thumbColor={settings.supervised ? "#007AFF" : "#f4f3f4"}
+          />
+        </View>
+        <View style={styles.toggleSection}>
+          <View style={styles.toggleContent}>
             <Text style={styles.sectionTitle}>Áudio</Text>
             <Text style={styles.sectionDescription}>
               Ativa ou desativa a reprodução de áudio

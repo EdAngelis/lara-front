@@ -1,6 +1,6 @@
 import { useSettings } from "@/components/SettingsContext";
 import Shape from "@/components/shape";
-import { View } from "@/components/Themed";
+import { Text, View } from "@/components/Themed";
 import { CORRECT_ANSWERS_PHRASES_AUDIO } from "@/constants/audios-references/correct_answers_phrases.constants";
 import { ESTA_E_A_LETRA } from "@/constants/audios-references/esta-e-a-letra.constant";
 import { ESTE_E_A_FORMA } from "@/constants/audios-references/este-e-a-forma.constant";
@@ -22,6 +22,7 @@ import {
   Animated,
   Easing,
   StyleSheet,
+  TouchableOpacity,
   TouchableWithoutFeedback,
 } from "react-native";
 import {
@@ -37,6 +38,21 @@ const styles = StyleSheet.create({
   slot: { flex: 1, alignItems: "center", justifyContent: "center", padding: 8 },
   slotDivider: {},
   letter: { fontSize: 200, fontWeight: "bold", textAlign: "center" },
+  newRoundButton: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    zIndex: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: "#4CAF50",
+  },
+  newRoundButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
 
 export default function ComparisonScreen() {
@@ -46,7 +62,7 @@ export default function ComparisonScreen() {
   const allNumbers = useMemo(() => "0123456789".split(""), []);
   const allShapes = useMemo(
     () => ["square", "circle", "triangle", "rectangle", "star"],
-    []
+    [],
   );
 
   const items = useMemo(() => {
@@ -84,12 +100,11 @@ export default function ComparisonScreen() {
 
   const currentColorScheme = useMemo(
     () => COLOR_SCHEMES[settings.colorScheme] || COLOR_SCHEMES[0],
-    [settings.colorScheme]
+    [settings.colorScheme],
   );
 
   const [itemsIndices, setItemsIndices] = useState<number[]>([]);
   const [targetIndex, setTargetIndex] = useState<number>(0);
-  const [touchCount, setTouchCount] = useState<number>(0);
   const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
   const [isSwiping, setIsSwiping] = useState<boolean>(false);
   const [swipeProcessed, setSwipeProcessed] = useState<boolean>(false);
@@ -104,7 +119,7 @@ export default function ComparisonScreen() {
     if (scalesRef.current.length !== count) {
       scalesRef.current = Array.from(
         { length: count },
-        () => new Animated.Value(1)
+        () => new Animated.Value(1),
       );
       animRefs.current = Array.from({ length: count }, () => null);
     }
@@ -128,20 +143,19 @@ export default function ComparisonScreen() {
       }
       return idx;
     },
-    [items.length]
+    [items.length],
   );
 
   const generateNewRound = useCallback(() => {
     const count = settings.numberOfItems;
     const newIndices = Array.from({ length: count }, () => -1);
     let newTargetIdx = 0;
-    let practiceSlot;
     // If `onlySelected` is true and we have practice items, prefer them
     const practiceIndexes = (settings.toPractice || [])
       .map((p) =>
         items.findIndex(
-          (it) => String(it).toLowerCase() === String(p).toLowerCase()
-        )
+          (it) => String(it).toLowerCase() === String(p).toLowerCase(),
+        ),
       )
       .filter((idx) => idx !== -1);
     const uniquePractice = Array.from(new Set(practiceIndexes));
@@ -159,7 +173,7 @@ export default function ComparisonScreen() {
       } else {
         // place all practice items first at random slots, then fill remaining
         const slots = Array.from({ length: count }, (_, i) => i).sort(
-          () => Math.random() - 0.5
+          () => Math.random() - 0.5,
         );
         let si = 0;
         for (const pi of uniquePractice) {
@@ -184,7 +198,7 @@ export default function ComparisonScreen() {
         ];
       const practiceIndex = items.findIndex(
         (it) =>
-          String(it).toLowerCase() === String(randomPractice).toLowerCase()
+          String(it).toLowerCase() === String(randomPractice).toLowerCase(),
       );
       const practiceSlot = Math.floor(Math.random() * count);
       const used = new Set<number>();
@@ -282,7 +296,7 @@ export default function ComparisonScreen() {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     animRefs.current[index] = animation;
     animation.start();
@@ -308,15 +322,14 @@ export default function ComparisonScreen() {
 
   const handleSideTouch = async (index: number) => {
     if (isSwiping || isAudioPlaying) return;
+    // if (touchCount === 1) {
+    //   setTouchCount(0);
+    //   generateNewRound();
+    //   return;
+    // }
 
-    if (touchCount === 1) {
-      setTouchCount(0);
-      generateNewRound();
-      return;
-    }
-
-    // second touch: register answer and advance
-    setTouchCount(1);
+    // // second touch: register answer and advance
+    // if (settings.supervised) setTouchCount(1);
     try {
       await answersService.createAnswer({
         numberOfItems: settings.numberOfItems,
@@ -334,7 +347,7 @@ export default function ComparisonScreen() {
     let audioSource: any = null;
     if (index === targetIndex) {
       const r = Math.floor(
-        Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length
+        Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length,
       );
       audioSource = CORRECT_ANSWERS_PHRASES_AUDIO[r]?.path || null;
     } else {
@@ -348,14 +361,14 @@ export default function ComparisonScreen() {
           ESTA_E_A_LETRA.find(
             (a) =>
               a.reference.toUpperCase() ===
-              String(items[audioIndex]).toUpperCase()
+              String(items[audioIndex]).toUpperCase(),
           )?.path || null;
       else
         audioSource =
           ESTE_E_O_NUMERO.find(
             (a) =>
               a.reference.toUpperCase() ===
-              String(items[audioIndex]).toUpperCase()
+              String(items[audioIndex]).toUpperCase(),
           )?.path || null;
     }
 
@@ -368,6 +381,7 @@ export default function ComparisonScreen() {
           if (status.isLoaded && status.didJustFinish) {
             sound.unloadAsync();
             setIsAudioPlaying(false);
+            if (!settings.supervised) generateNewRound();
           }
         });
       } catch (error) {
@@ -484,6 +498,14 @@ export default function ComparisonScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
+      {settings.supervised && (
+        <TouchableOpacity
+          style={styles.newRoundButton}
+          onPress={() => generateNewRound()}
+        >
+          <Text style={styles.newRoundButtonText}>Próxima</Text>
+        </TouchableOpacity>
+      )}
       <PanGestureHandler
         onGestureEvent={onGestureEvent}
         onHandlerStateChange={onGestureEnd}
