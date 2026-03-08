@@ -1,6 +1,6 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
-import Svg, { Circle, Polygon, Rect, Path } from "react-native-svg";
+import { StyleSheet, View } from "react-native";
+import Svg, { Circle, Path, Polygon, Rect } from "react-native-svg";
 
 interface ShapeProps {
   shape: "square" | "circle" | "triangle" | "rectangle" | "star";
@@ -55,8 +55,8 @@ export default function Shape({ shape, color, size }: ShapeProps) {
         );
 
       case "rectangle":
-        const rectWidth = dimension;
-        const rectHeight = dimension * 0.6;
+        const rectWidth = dimension * 2;
+        const rectHeight = dimension;
         return (
           <Svg width={rectWidth} height={rectHeight}>
             <Rect width={rectWidth} height={rectHeight} fill={color} />
@@ -80,7 +80,7 @@ export default function Shape({ shape, color, size }: ShapeProps) {
           dimension / 2,
           5,
           dimension / 2,
-          dimension / 4
+          dimension / 4,
         );
         return (
           <Svg width={dimension} height={dimension}>
@@ -102,7 +102,7 @@ function generateStarPath(
   cy: number,
   points: number,
   outerRadius: number,
-  innerRadius: number
+  innerRadius: number,
 ): string {
   let path = "";
   const angle = Math.PI / points;
