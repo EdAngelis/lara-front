@@ -15,6 +15,7 @@ export default ({ config }) => {
       BASE_URL:
         process.env.BASE_URL ?? process.env.API_URL ?? existingExtra.BASE_URL,
       API_KEY: process.env.API_KEY ?? existingExtra.API_KEY,
+      // If ENV is Development it won't send the result to the API
       ENV: process.env.ENV ?? existingExtra.ENV,
     },
   };

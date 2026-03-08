@@ -46,7 +46,7 @@ export default function ComparisonScreen() {
   const allNumbers = useMemo(() => "0123456789".split(""), []);
   const allShapes = useMemo(
     () => ["square", "circle", "triangle", "rectangle", "star"],
-    []
+    [],
   );
 
   const items = useMemo(() => {
@@ -84,7 +84,7 @@ export default function ComparisonScreen() {
 
   const currentColorScheme = useMemo(
     () => COLOR_SCHEMES[settings.colorScheme] || COLOR_SCHEMES[0],
-    [settings.colorScheme]
+    [settings.colorScheme],
   );
 
   const [itemsIndices, setItemsIndices] = useState<number[]>([]);
@@ -104,7 +104,7 @@ export default function ComparisonScreen() {
     if (scalesRef.current.length !== count) {
       scalesRef.current = Array.from(
         { length: count },
-        () => new Animated.Value(1)
+        () => new Animated.Value(1),
       );
       animRefs.current = Array.from({ length: count }, () => null);
     }
@@ -128,7 +128,7 @@ export default function ComparisonScreen() {
       }
       return idx;
     },
-    [items.length]
+    [items.length],
   );
 
   const generateNewRound = useCallback(() => {
@@ -139,8 +139,8 @@ export default function ComparisonScreen() {
     const practiceIndexes = (settings.toPractice || [])
       .map((p) =>
         items.findIndex(
-          (it) => String(it).toLowerCase() === String(p).toLowerCase()
-        )
+          (it) => String(it).toLowerCase() === String(p).toLowerCase(),
+        ),
       )
       .filter((idx) => idx !== -1);
     const uniquePractice = Array.from(new Set(practiceIndexes));
@@ -158,7 +158,7 @@ export default function ComparisonScreen() {
       } else {
         // place all practice items first at random slots, then fill remaining
         const slots = Array.from({ length: count }, (_, i) => i).sort(
-          () => Math.random() - 0.5
+          () => Math.random() - 0.5,
         );
         let si = 0;
         for (const pi of uniquePractice) {
@@ -183,7 +183,7 @@ export default function ComparisonScreen() {
         ];
       const practiceIndex = items.findIndex(
         (it) =>
-          String(it).toLowerCase() === String(randomPractice).toLowerCase()
+          String(it).toLowerCase() === String(randomPractice).toLowerCase(),
       );
       const practiceSlot = Math.floor(Math.random() * count);
       const used = new Set<number>();
@@ -280,7 +280,7 @@ export default function ComparisonScreen() {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     animRefs.current[index] = animation;
     animation.start();
@@ -332,7 +332,7 @@ export default function ComparisonScreen() {
     let audioSource: any = null;
     if (index === targetIndex) {
       const r = Math.floor(
-        Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length
+        Math.random() * CORRECT_ANSWERS_PHRASES_AUDIO.length,
       );
       audioSource = CORRECT_ANSWERS_PHRASES_AUDIO[r]?.path || null;
     } else {
@@ -346,14 +346,14 @@ export default function ComparisonScreen() {
           ESTA_E_A_LETRA.find(
             (a) =>
               a.reference.toUpperCase() ===
-              String(items[audioIndex]).toUpperCase()
+              String(items[audioIndex]).toUpperCase(),
           )?.path || null;
       else
         audioSource =
           ESTE_E_O_NUMERO.find(
             (a) =>
               a.reference.toUpperCase() ===
-              String(items[audioIndex]).toUpperCase()
+              String(items[audioIndex]).toUpperCase(),
           )?.path || null;
     }
 
@@ -453,7 +453,6 @@ export default function ComparisonScreen() {
           if (!held) {
             handleSideTouch(slotIdx);
           }
-          console.log("Held:", held);
           // clear timestamp after evaluating
           pressInTimeRef.current[slotIdx] = 0;
         }}
