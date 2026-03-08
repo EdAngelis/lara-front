@@ -53,6 +53,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
+  shuffleButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: "#2196F3",
+  },
+  shuffleButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
 
 export default function ComparisonScreen() {
@@ -431,6 +446,13 @@ export default function ComparisonScreen() {
     }
   };
 
+  const shufflePositions = () => {
+    const targetItem = itemsIndices[targetIndex];
+    const shuffled = [...itemsIndices].sort(() => Math.random() - 0.5);
+    setItemsIndices(shuffled);
+    setTargetIndex(shuffled.indexOf(targetItem));
+  };
+
   const onGestureEnd = () => {
     setSwipeProcessed(false);
     setTimeout(() => setIsSwiping(false), 100);
@@ -499,12 +521,20 @@ export default function ComparisonScreen() {
   return (
     <GestureHandlerRootView style={styles.container}>
       {settings.supervised && (
-        <TouchableOpacity
-          style={styles.newRoundButton}
-          onPress={() => generateNewRound()}
-        >
-          <Text style={styles.newRoundButtonText}>Próxima</Text>
-        </TouchableOpacity>
+        <>
+          <TouchableOpacity
+            style={styles.newRoundButton}
+            onPress={() => generateNewRound()}
+          >
+            <Text style={styles.newRoundButtonText}>{">"}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.shuffleButton}
+            onPress={shufflePositions}
+          >
+            <Text style={styles.shuffleButtonText}>O</Text>
+          </TouchableOpacity>
+        </>
       )}
       <PanGestureHandler
         onGestureEvent={onGestureEvent}
